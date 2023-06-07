@@ -1,0 +1,120 @@
+.sign-in-form {
+	margin: 8.5% auto !important;
+}
+.color-white {
+	color:#fff !important;
+}
+.color-white i {
+    color: #fff !important;
+}
+
+.was-validated .form-control.invalid
+{
+    border-color: #ff5c75 !important;
+}
+.image-table-cell {
+	max-width: 70px;
+}
+a.image-popup-link {
+	display: inline-block;
+}
+.swal2-popup .swal2-input {
+   	height: 2.625em;
+    width: 208px;
+    padding: .75em;
+}
+
+.cart-header-user {
+  font-weight: bold;
+}
+
+.cart-header-user span {
+  font-size: 14px;
+  font-weight: bold;
+  float: left;
+  min-width: 33%;
+}
+
+
+.page-analytics select {
+    background: rgba(0,0,0,0) url(../img/down.png) no-repeat scroll calc(90% + 3px) center/15px auto;
+    min-width: 150px;
+    float: right;
+} 
+
+.page-analytics select {
+    padding: 5px 15px;
+    background: #fff;
+    background: rgba(0,0,0,0) url(../img/down.png) no-repeat scroll calc(90% + 3px) center/15px auto;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.progress {
+    border-radius: 0;
+    min-height: 22px;
+    background: #fff;
+}
+
+.progress-bar {
+  background: #fff4cd;
+  color: #000;
+}
+
+.scrolling-wrapper {
+  overflow-x: scroll;
+}
+
+.datepicker {
+  /*top: 210px !important;*/
+}
+
+.page-analytics .form-group label {
+  margin-top: 10px;
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+
+.search-asc-desc {
+  float: left;
+  background-position-x: 75px;
+  min-width: 110px;
+  background: #fff;
+  background: rgba(0,0,0,0) url(../img/up-down.png) no-repeat scroll calc(80% + 3px) center/15px auto;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.search-asc-desc.desc {
+  background: rgba(0,0,0,0) url(../img/down-arrow.png) no-repeat scroll calc(80% + 3px) center/15px auto;
+}
+
+.search-asc-desc.asc {
+  background: rgba(0,0,0,0) url(../img/up-arrow.png) no-repeat scroll calc(80% + 3px) center/15px auto;
+}
+
+.search-asc-desc a {
+  color: #617182 !important;
+}
+
+.chart-sub-text {
+  color: #000;
+}
+.chart-main-text {
+  font-weight: bold !important;
+  font-size: 30px;
+  color: #000;
+}
+
+.custom-bold {
+  font-size: 15px !important;
+  /*font-weight: bold !important;*/
+}
+
+.custom-bold label {
+  font-size: 16px !important;
+  min-width: 200px;
+}
