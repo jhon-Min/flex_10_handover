@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-
-use DB;
-use App\Helpers\Helper;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Storage;
 use JavaScript;
 use Carbon\Carbon;
-use App\User;
-use App\SearchHistory;
+use App\Models\User;
+use App\Models\SearchHistory;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
+use Laracasts\Utilities\JavaScript\JavaScriptFacade;
 
 class SearchHistoryController extends Controller
 {
@@ -166,7 +163,7 @@ class SearchHistoryController extends Controller
         $previous_order_total = number_format($previous_order_total, 2, ".", ",");
 
         $data['array_orders'] = json_encode($array_orders_list);
-        JavaScript::put([
+        JavaScriptFacade::put([
             'current_order_total' => $current_order_total,
             'previous_order_total' => $previous_order_total,
         ]);

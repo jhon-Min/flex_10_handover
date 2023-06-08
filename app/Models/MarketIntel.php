@@ -32,11 +32,12 @@ class MarketIntel extends Model
             ]
         ];
     }
+
     protected $appends = ['image_url'];
+
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-
             return  Storage::disk('public')->url(Config::get('constant.MARKET_INTEL_IMAGE_PATH')) . $this->image;
         }
     }

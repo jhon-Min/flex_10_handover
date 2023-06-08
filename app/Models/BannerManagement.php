@@ -10,11 +10,16 @@ use Illuminate\Database\Eloquent\Model;
 class BannerManagement extends Model
 {
     use SoftDeletes;
+
+    protected $table = "banner_managements";
+
     protected $hidden = [
         'updated_at', 'deleted_at'
     ];
     protected $fillable = ['id', 'image', 'created_at', 'updated_at', 'deleted_at'];
+
     protected $appends = ['image_url'];
+
     public function getImageUrlAttribute()
     {
         if ($this->image) {

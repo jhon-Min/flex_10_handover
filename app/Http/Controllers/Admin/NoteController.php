@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\User;
-use App\Note;
+use App\Models\User;
+use App\Models\Note;
 use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
@@ -28,10 +28,10 @@ class NoteController extends Controller
                 return strtotime($data->created_at);
             })
             ->editColumn('date', function ($data) {
-                return date('d/m/Y',strtotime($data->created_at));
+                return date('d/m/Y', strtotime($data->created_at));
             })
             ->editColumn('product_nr', function ($data) {
-              
+
                 return $data->product->product_nr;
             })
             ->editColumn('description', function ($data) {
@@ -40,7 +40,7 @@ class NoteController extends Controller
             ->editColumn('user', function ($data) {
                 return $data->user->name;
             })
-            ->rawColumns(['date_string','date', 'product_nr', 'description', 'user'])
+            ->rawColumns(['date_string', 'date', 'product_nr', 'description', 'user'])
             ->make(true);
     }
 
@@ -53,7 +53,7 @@ class NoteController extends Controller
     {
         //
     }
-   
+
 
     /**
      * Store a newly created resource in storage.

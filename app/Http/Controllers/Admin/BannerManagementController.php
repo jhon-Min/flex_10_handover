@@ -4,18 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Support\Facades\Config;
 use App\Helpers\Helper;
-use Illuminate\Support\Facades\Storage;
-use Redirect;
-use App\BannerManagement;
+use Illuminate\Support\Facades\Redirect;
+use App\Models\BannerManagement;
 use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
 
 class BannerManagementController extends Controller
 {
+    public $BANNER_IMAGE_PATH;
+
     public function __construct()
     {
-
         $this->BANNER_IMAGE_PATH = Config::get('constant.BANNER_IMAGE_PATH');
     }
     /**
@@ -64,12 +65,11 @@ class BannerManagementController extends Controller
         try {
 
             $rules = [
-
                 "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:5120|dimensions:width=1108,height=248",
                 // "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:5120",
             ];
 
-            $validator = \Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 2MB']);
+            $validator = Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 2MB']);
             if ($validator->fails()) {
                 return Redirect::back()->withErrors($validator)->withInput();
             }
@@ -102,7 +102,7 @@ class BannerManagementController extends Controller
     public function destroy($id)
     {
         try {
-            $validator = \Validator::make(['id' => $id], [
+            $validator = Validator::make(['id' => $id], [
                 "id" => "required|integer|exists:banner_managements,id",
             ]);
             if ($validator->fails()) {

@@ -85,7 +85,7 @@ class MarketIntelController extends Controller
             $rules = [
                 "title" => "required|min:2",
                 "description" => "required|min:2",
-                // "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:width=265,height=200",
+                "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:width=265,height=200",
                 "short_description" => "required|min:2|max:100",
                 //"image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048",
             ];
