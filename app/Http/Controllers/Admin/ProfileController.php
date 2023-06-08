@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use Auth;
 use Hash;
-use Helper;
+use App\Helpers\Helper;
 use Illuminate\Support\Facades\Config;
 use App\User;
 use Redirect;

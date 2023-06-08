@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 
 use DB;
-use Helper;
+use App\Helpers\Helper;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use JavaScript;

@@ -2,18 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Helper;
+use App\Helpers\Helper;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
-use App\User;
-use Validator;
-use App\Cart;
-use App\Order;
-use App\OrderProduct;
-use App\UserRole;
+use App\Models\Cart;
 use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
 
 class AbandonedCartController extends Controller
 {
@@ -26,12 +22,8 @@ class AbandonedCartController extends Controller
     {
         $ordersQuery =  Cart::with(['user', 'product']);
         // $ordersQuery->where('status', '=', '6');
-
         $ordersQuery->groupBy('user_id');
-
         $orders = $ordersQuery->get();
-
-
         $data['orders'] = $orders;
         $data['status'] = Config::get('constant.order_status');
         return view('abandoned-cart.abandoned-cart', $data);
@@ -165,7 +157,7 @@ class AbandonedCartController extends Controller
     public function destroy($id)
     {
         try {
-            $validator = \Validator::make(['id' => $id], [
+            $validator = Validator::make(['id' => $id], [
                 "id" => "required|integer|exists:cart,user_id",
             ]);
             if ($validator->fails()) {

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Support\Facades\Config;
-use Helper;
+use App\Helpers\Helper;
 use Illuminate\Support\Facades\Storage;
 use Redirect;
 use App\BannerManagement;

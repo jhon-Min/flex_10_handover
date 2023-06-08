@@ -3,19 +3,23 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Support\Facades\Config;
-use Helper;
 use Illuminate\Support\Facades\Storage;
-use Redirect;
-use App\MarketIntel;
+use App\Helpers\Helper;
+use App\Models\MarketIntel;
 use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\FacadesValidator;
+use Illuminate\Support\Str;
 
 class MarketIntelController extends Controller
 {
+    public $MARKET_INTEL_IMAGE_PATH;
+
     public function __construct()
     {
-
         $this->MARKET_INTEL_IMAGE_PATH = Config::get('constant.MARKET_INTEL_IMAGE_PATH');
     }
     /**
@@ -38,13 +42,13 @@ class MarketIntelController extends Controller
                 //return "<img  src='" . $data->image_url . "' class=\"image-table-cell\">";
             })
             ->editColumn('title', function ($data) {
-                return str_limit($data->title, 100);
+                return Str::limit($data->title, 100);
             })
             ->editColumn('short_description', function ($data) {
-                return str_limit($data->short_description, 100);
+                return Str::limit($data->short_description, 100);
             })
             ->editColumn('url', function ($data) {
-                return str_limit($data->url, 100);
+                return Str::limit($data->url, 100);
             })
             ->editColumn('created_at', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
@@ -81,14 +85,14 @@ class MarketIntelController extends Controller
             $rules = [
                 "title" => "required|min:2",
                 "description" => "required|min:2",
-                "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:width=265,height=200",
+                // "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:width=265,height=200",
                 "short_description" => "required|min:2|max:100",
                 //"image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048",
             ];
             if (isset($request->url) && !empty($request->url)) {
                 $rules['url'] =  "url";
             }
-            $validator = \Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 5MB']);
+            $validator = Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 5MB']);
             if ($validator->fails()) {
                 return Redirect::back()->withErrors($validator)->withInput();
             }
@@ -142,7 +146,7 @@ class MarketIntelController extends Controller
     public function edit($id)
     {
         try {
-            $validator = \Validator::make(['id' => $id], [
+            $validator = Validator::make(['id' => $id], [
                 "id" => "required|integer|exists:market_intels,id",
             ]);
             if ($validator->fails()) {
@@ -183,7 +187,7 @@ class MarketIntelController extends Controller
                 //$rules['image'] =  "image|mimes:jpeg,png,jpg,gif,svg|max:2048";
             }
 
-            $validator = \Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 5MB']);
+            $validator = Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 5MB']);
 
             if ($validator->fails()) {
                 return Redirect::back()->withErrors($validator)->withInput();
@@ -221,7 +225,7 @@ class MarketIntelController extends Controller
     public function destroy($id)
     {
         try {
-            $validator = \Validator::make(['id' => $id], [
+            $validator = Validator::make(['id' => $id], [
                 "id" => "required|integer|exists:market_intels,id",
             ]);
             if ($validator->fails()) {
