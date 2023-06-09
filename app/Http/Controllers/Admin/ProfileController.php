@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Auth;
-use Hash;
 use App\Helpers\Helper;
 use Illuminate\Support\Facades\Config;
-use App\User;
-use Redirect;
-use Validator;
-use App\UserRole;
+use App\Models\User;
+use App\Models\UserRole;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
+    public $USER_IMAGE_PATH;
+
     public function __construct()
     {
 
@@ -50,7 +52,7 @@ class ProfileController extends Controller
             if ($request->hasFile('image')) {
                 $rules["image"] = "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:max_width=200,max_height=200";
             }
-            $validator = \Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 2MB']);
+            $validator = Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 2MB']);
             if ($validator->fails()) {
                 return Redirect::back()->withErrors($validator)->withInput()->with('tab', 'profile');
             }

@@ -2,24 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Helpers\Helper;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Storage;
-use Validator;
-use App\Product;
-use App\ProductQuantity;
-use App\Branch;
-use App\ProductImportStatus;
 use Illuminate\Http\Request;
-use Yajra\Datatables\Datatables;
+use App\Models\CustomerUser;
+use App\Models\ProductImportStatus;
 use App\Http\Controllers\Controller;
-use App\Repositories\ProductsRepository;
-use Redirect, Response, File;
-use App\Document;
-use App\CustomerUser;
-use DB;
-use App\Jobs\ImportProductStock;
 use App\Jobs\ImportProductPrice;
+use App\Jobs\ImportProductStock;
 use DateTime;
 
 class ProductController extends Controller
