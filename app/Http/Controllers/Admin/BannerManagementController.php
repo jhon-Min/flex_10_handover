@@ -9,6 +9,7 @@ use App\Models\BannerManagement;
 use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreBannerManagementReequest;
 use Illuminate\Support\Facades\Validator;
 
 class BannerManagementController extends Controller
@@ -43,7 +44,6 @@ class BannerManagementController extends Controller
             ->rawColumns(['image', 'action'])
             ->make(true);
     }
-
     /**
      * Show the form for creating a new resource.
      *
@@ -60,20 +60,9 @@ class BannerManagementController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreBannerManagementReequest $request)
     {
         try {
-
-            $rules = [
-                "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:5120|dimensions:width=1108,height=248",
-                // "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:5120",
-            ];
-
-            $validator = Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 2MB']);
-            if ($validator->fails()) {
-                return Redirect::back()->withErrors($validator)->withInput();
-            }
-
             if ($request->hasFile('image')) {
 
                 $file_attribue = [

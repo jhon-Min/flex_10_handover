@@ -10,6 +10,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OrderRequest;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
@@ -112,7 +113,7 @@ class OrderController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request)
+    public function update(OrderRequest $request)
     {
         try {
             $validator = Validator::make($request->all(), [

@@ -35,7 +35,6 @@ class UserController extends Controller
 
     public function getUserDatatable()
     {
-
         $users = User::whereHas('roles', function ($query) {
             $query->whereNotIn('name', ['Super Admin', 'Admin']);
         })->orderBy('id', 'DESC')->get();
@@ -90,7 +89,7 @@ class UserController extends Controller
         $validator = Validator::make($data, [
             'id' => 'required|exists:users,id',
             'status' => 'required|in:1,2,3',
-            // 'account_code' => 'required|string'
+            'account_code' => 'required|string'
         ]);
 
 
@@ -105,7 +104,7 @@ class UserController extends Controller
 
         if ($updated) {
             if ($status == 2) {
-                $user->notify(new AccountApprovedSuccess());
+                // $user->notify(new AccountApprovedSuccess());
             } else {
                 $mail_attributes = [
                     'mail_template' => "emails.user_account_notification",
@@ -113,7 +112,7 @@ class UserController extends Controller
                     'mail_to_name' => $user->name,
                     'mail_subject' => "Flexible Drive : Account Update!",
                 ];
-                Helper::sendEmail($mail_attributes);
+                // Helper::sendEmail($mail_attributes);
             }
 
             $badge = Config::get('constant.user_account_status_lables')[$status];
@@ -143,7 +142,6 @@ class UserController extends Controller
             'id' => 'required|exists:users,id',
             'is_active' => 'required|in:1,0',
         ]);
-
 
         if ($validator->fails()) {
             return response()->json(['success' => '0', 'message' => $validator->errors()], 401);
