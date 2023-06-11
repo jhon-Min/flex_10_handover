@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
-use Hash;
-use Config;
-use App\User;
-use validator;
+use App\Models\User;
+use App\Models\PasswordReset;
 use Carbon\Carbon;
-use App\PasswordReset;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\BaseController;
+use App\Models\User as ModelsUser;
 use App\Notifications\PasswordResetRequest;
 use App\Notifications\PasswordResetSuccess;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class PasswordResetController extends BaseController
 {
@@ -26,7 +27,7 @@ class PasswordResetController extends BaseController
     public function resetRequest(Request $request)
     {
         try {
-        
+
             $validator = Validator::make($request->all(), [
                 'email' => 'required|string|email',
             ]);
@@ -35,23 +36,22 @@ class PasswordResetController extends BaseController
                 return $this->sendError('Invalid input', $validator->errors()->all(), 401);
             }
 
-            $user = User::where('email', $request->email)->first();
+            $user = ModelsUser::where('email', $request->email)->first();
 
-            if($user) {
-                $passwordReset = PasswordReset::updateOrCreate(['email' => $user->email],['email' => $user->email,'token' => str_random(60)]);
+            if ($user) {
+                $passwordReset = PasswordReset::updateOrCreate(['email' => $user->email], ['email' => $user->email, 'token' => Str::random(60)]);
                 if ($user && $passwordReset) {
                     $user->notify(
                         new PasswordResetRequest($passwordReset->token)
                     );
                 }
             }
-            
-            return $this->sendResponse([], "If user is registered, password reset link will be sent to registered email address.");
 
+            return $this->sendResponse([], "If user is registered, password reset link will be sent to registered email address.");
         } catch (\Exception $e) {
-            
+
             return $this->sendError($e->getMessage(), [], 401);
-        }  
+        }
     }
     /**
      * @group Forgot Password
@@ -71,14 +71,14 @@ class PasswordResetController extends BaseController
                 return $this->sendError('This password reset token is invalid', [], 401);
             }
             if (Carbon::parse($passwordReset->updated_at)->addMinutes(Config::get('constant.password_reset_timeout'))->isPast()) {
-            $passwordReset->delete();
-            return $this->sendError('Token has been expired. Please try again.', [], 401);
+                $passwordReset->delete();
+                return $this->sendError('Token has been expired. Please try again.', [], 401);
             }
             return $this->sendResponse($passwordReset, "Token is Valid.");
         } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
-        }  
+        }
     }
     /**
      * @group Forgot Password
@@ -105,9 +105,9 @@ class PasswordResetController extends BaseController
             if (!$passwordReset) {
                 return $this->sendError('This password reset token is invalid', [], 401);
             }
-                
+
             $user = User::where('email', $passwordReset->email)->first();
-        
+
             $user->password = Hash::make($request->password);
             $user->save();
             $passwordReset->delete();
@@ -116,6 +116,6 @@ class PasswordResetController extends BaseController
         } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
-        }  
+        }
     }
 }

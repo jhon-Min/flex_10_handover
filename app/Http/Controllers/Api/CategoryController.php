@@ -2,28 +2,30 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Category;
-use App\Product;
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\BaseController;
 use App\Repositories\ProductsRepository;
 
 class CategoryController extends BaseController
 {
+    public $productsRepository;
+
     public function __construct(ProductsRepository $productsRepository)
     {
-        $this->productsRepository = $productsRepository;        
+        $this->productsRepository = $productsRepository;
     }
 
-    public function positions (Request $request){
-        try{ 
-                             
+    public function positions(Request $request)
+    {
+        try {
+
             $message = "All fitting positions";
             $fitting_positions = Product::select('fitting_position')->whereRaw('fitting_position is not null and fitting_position != \'\'')->distinct()->get();
 
             if (!empty($request->all())) {
-                foreach($fitting_positions as $fitting_position) {
+                foreach ($fitting_positions as $fitting_position) {
                     $filters = $request->all();
                     $filters['count'] = true;
                     $filters['fitting_position'] = $fitting_position->fitting_position;
@@ -31,14 +33,13 @@ class CategoryController extends BaseController
                     $fitting_position->product_count = $products;
                 }
             } else {
-                foreach($fitting_positions as $fitting_position) {
+                foreach ($fitting_positions as $fitting_position) {
                     $fitting_position->product_count = Product::where('fitting_position', 'like', '%' . $fitting_position['fitting_position'] . '%')->count();
                 }
             }
 
             return $this->sendResponse($fitting_positions, $message);
-
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
@@ -64,12 +65,12 @@ class CategoryController extends BaseController
      */
     public function index(Request $request)
     {
-        try{ 
-                             
+        try {
+
             $message = "All Categories";
             $categories = Category::all();
-            
-            if(!empty($request->all())) {
+
+            if (!empty($request->all())) {
                 foreach ($categories as $category) {
                     $filters = $request->all();
                     $filters['count'] = true;
@@ -79,19 +80,16 @@ class CategoryController extends BaseController
                 }
             } else {
                 foreach ($categories as $category) {
-                    $category->product_count = $category->products()->count();                    
+                    $category->product_count = $category->products()->count();
                 }
-
             }
 
             $fitting_positions = Product::select('fitting_position')->distinct()->get();
-            
-            return $this->sendResponse($categories, $message);
 
-        } catch(\Exception $e) {
+            return $this->sendResponse($categories, $message);
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
     }
-
 }

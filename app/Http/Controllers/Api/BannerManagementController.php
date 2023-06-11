@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use Config;
-use Helper;
-use Validator;
-use App\BannerManagement;
+use App\Models\BannerManagement;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\BaseController;
+use Illuminate\Support\Facades\Validator;
 
 class BannerManagementController extends BaseController
 {

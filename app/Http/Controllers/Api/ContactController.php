@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use Mail;
-use Validator;
-use Helper;
+use App\Helpers\Helper;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\BaseController;
+use Illuminate\Support\Facades\Validator;
 
 class ContactController extends BaseController
 {
@@ -22,9 +20,10 @@ class ContactController extends BaseController
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request) {
-        
-        $validator = Validator::make($request->all(),[
+    public function index(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
             "first_name" => "required|min:2",
             "last_name" => "required|min:2",
             "email" => "required|email|min:1",
@@ -32,12 +31,12 @@ class ContactController extends BaseController
             "message" => "required|min:5"
         ]);
 
-        try { 
+        try {
 
-            if($validator->fails()) {
-                return $this->sendError("validation errors", $validator->errors()->all(), 400);    
+            if ($validator->fails()) {
+                return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
- 
+
             $mail_attributes = [
                 'mail_template' => "emails.contact",
                 'mail_to_email' => config('app.administrator_email'),
@@ -48,9 +47,8 @@ class ContactController extends BaseController
                 ]
             ];
             Helper::sendEmail($mail_attributes);
-            return $this->sendResponse([],"Mail send!");
-
-        } catch(\Exception $e) {
+            return $this->sendResponse([], "Mail send!");
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }

@@ -4,17 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Session;
-use Ixudra\Curl\Facades\Curl;
-use App\Brand;
+use App\Models\Brand;
 use App\Repositories\ProductsRepository;
 
 class BrandController extends BaseController
 {
+    public $productsRepository;
+
     public function __construct(ProductsRepository $productsRepository)
     {
-        $this->productsRepository = $productsRepository;        
+        $this->productsRepository = $productsRepository;
     }
 
     /** 

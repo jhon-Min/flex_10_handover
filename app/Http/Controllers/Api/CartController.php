@@ -2,32 +2,23 @@
 
 namespace App\Http\Controllers\Api;
 
-use DB;
-use PDF;
-use Auth;
-use Mail;
-use Config;
-use Storage;
-use App\User;
-use App\Cart;
-use App\ProductQuantity;
-use App\Branch;
-use Validator;
-use App\PickupLocation;
-use Carbon\Carbon;
+use App\Models\Cart;
+use App\Models\ProductQuantity;
+use App\Models\Branch;
+use App\Models\PickupLocation;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\BaseController;
-use Illuminate\Support\Facades\Session;
-use Symfony\Component\Console\Input\Input;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Validator;
 
 class CartController extends BaseController
 {
 
+    public $INVOICES_PATH, $GST, $DELIVERY_CHARGES;
+
     public function __construct()
     {
-        
         $this->INVOICES_PATH = Config::get('constant.INVOICES_PATH');
         $this->GST = Config::get('constant.invoice.gst');
         $this->DELIVERY_CHARGES = Config::get('constant.invoice.delivery_charges');
@@ -110,47 +101,46 @@ class CartController extends BaseController
             $gst = 0;
             $delivry_chage =  0;
             $total = 0;
-            $products['items'] = Cart::where('user_id',Auth::user()->id)->with([
-                                                                        'product',
-                                                                        'product.brand', 
-                                                                        'product.vehicles',
-                                                                        'product.vehicles.make',
-                                                                        'product.vehicles.model',
-                                                                        'product.images',
-                                                                        'product.categories'
-                                                                    ])->get();
-            if($products['items']->count() > 0) {
+            $products['items'] = Cart::where('user_id', Auth::user()->id)->with([
+                'product',
+                'product.brand',
+                'product.vehicles',
+                'product.vehicles.make',
+                'product.vehicles.model',
+                'product.images',
+                'product.categories'
+            ])->get();
+            if ($products['items']->count() > 0) {
 
                 $sub_total = 0;
                 $cart_item_branch_qty = array();
                 foreach ($products['items'] as $cart_item) {
-                    $branchWiseQty = ProductQuantity::where('product_id', $cart_item -> product_id)->get();
+                    $branchWiseQty = ProductQuantity::where('product_id', $cart_item->product_id)->get();
                     $branchWiseQtyForPush = array();
-                    foreach($branchWiseQty as &$branchQty){
+                    foreach ($branchWiseQty as &$branchQty) {
                         $branch = Branch::where('id', $branchQty->branch_id)->first();
                         $branchQty['branch'] = $branch;
                         array_push($branchWiseQtyForPush, $branchQty);
                     }
                     $cart_item['qty_with_location'] = $branchWiseQtyForPush;
                     array_push($cart_item_branch_qty, $cart_item);
-                   $sub_total += $cart_item->product->price_nett * $cart_item->qty;
+                    $sub_total += $cart_item->product->price_nett * $cart_item->qty;
                 }
 
                 $gst = $sub_total * $this->GST / 100;
                 $delivry_chage =  $this->DELIVERY_CHARGES;
-                
+
                 $total = $sub_total + $gst + $delivry_chage;
                 $products['items'] = $cart_item_branch_qty;
             }
             $products['pickup_locations'] = PickupLocation::all();
 
-            $products['GST'] = number_format($gst,2);
-            $products['subtotal'] = number_format($sub_total,2);
-            $products['delivery'] = number_format($delivry_chage,2);
-            $products['total'] = number_format($total,2);
+            $products['GST'] = number_format($gst, 2);
+            $products['subtotal'] = number_format($sub_total, 2);
+            $products['delivery'] = number_format($delivry_chage, 2);
+            $products['total'] = number_format($total, 2);
             return $this->sendResponse($products, 'cart items');
-
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
@@ -166,17 +156,17 @@ class CartController extends BaseController
      */
     public function store(Request  $request)
     {
-        $validator = Validator::make(['id' => $request->product_id, 'qty' => $request->qty],[
+        $validator = Validator::make(['id' => $request->product_id, 'qty' => $request->qty], [
             "id" => "required|exists:products",
             "qty" => "required|numeric|min:1"
         ]);
 
-        try {  
-            
-            if($validator->fails()) {
-                return $this->sendError("validation errors", $validator->errors()->all(), 400);    
+        try {
+
+            if ($validator->fails()) {
+                return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
-            
+
             $cart = [
                 'product_id' => $request->product_id,
                 'user_id' => Auth::user()->id,
@@ -186,19 +176,18 @@ class CartController extends BaseController
             $user_cart->qty = $request->qty;
             $user_cart->save();
 
-            $products = Cart::where('user_id',Auth::user()->id)->with([
-                                                                        'product',
-                                                                        'product.brand', 
-                                                                        'product.vehicles',
-                                                                        'product.vehicles.make',
-                                                                        'product.vehicles.model',
-                                                                        'product.images',
-                                                                        'product.categories'
-                                                                    ])->get()->toArray();
-            
-            return $this->sendResponse(['cart_items' => $products], "Added to Cart");
+            $products = Cart::where('user_id', Auth::user()->id)->with([
+                'product',
+                'product.brand',
+                'product.vehicles',
+                'product.vehicles.make',
+                'product.vehicles.model',
+                'product.images',
+                'product.categories'
+            ])->get()->toArray();
 
-        } catch(\Exception $e) {
+            return $this->sendResponse(['cart_items' => $products], "Added to Cart");
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
@@ -215,16 +204,16 @@ class CartController extends BaseController
      */
     public function bulkStore(Request  $request)
     {
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             "products" => "required|array",
             "products.*.product_id" => "required|integer|exists:products,id",
             "products.*.qty" => "required|numeric"
         ]);
 
-        try {  
-            
-            if($validator->fails()) {
-                return $this->sendError("validation errors", $validator->errors()->all(), 400);    
+        try {
+
+            if ($validator->fails()) {
+                return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
 
             foreach ($request->products as $product) {
@@ -239,19 +228,18 @@ class CartController extends BaseController
                 $user_cart->save();
             }
 
-            $products = Cart::where('user_id',Auth::user()->id)->with([
-                                                                        'product',
-                                                                        'product.brand', 
-                                                                        'product.vehicles',
-                                                                        'product.vehicles.make',
-                                                                        'product.vehicles.model',
-                                                                        'product.images',
-                                                                        'product.categories'
-                                                                    ])->get()->toArray();
-            
-            return $this->sendResponse(['cart_items' => $products], "Added to Cart");
+            $products = Cart::where('user_id', Auth::user()->id)->with([
+                'product',
+                'product.brand',
+                'product.vehicles',
+                'product.vehicles.make',
+                'product.vehicles.model',
+                'product.images',
+                'product.categories'
+            ])->get()->toArray();
 
-        } catch(\Exception $e) {
+            return $this->sendResponse(['cart_items' => $products], "Added to Cart");
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
@@ -263,24 +251,23 @@ class CartController extends BaseController
      */
     public function destroy($product)
     {
-    
-        try {  
-            $remove_item = Cart::where('product_id',$product)
-                                ->where('user_id',Auth::user()->id)
-                                ->delete();
-            
+
+        try {
+            $remove_item = Cart::where('product_id', $product)
+                ->where('user_id', Auth::user()->id)
+                ->delete();
+
             $message = "Removed from cart";
-            if(!$remove_item){
+            if (!$remove_item) {
                 $message = 'No items in cart for this product';
             }
 
-            $products = Cart::where('user_id',Auth::user()->id)->with([
-                                'product'
-                            ])->get()->toArray();
-            
-            return $this->sendResponse(['cart_items' => $products], $message);
+            $products = Cart::where('user_id', Auth::user()->id)->with([
+                'product'
+            ])->get()->toArray();
 
-        } catch(\Exception $e) {
+            return $this->sendResponse(['cart_items' => $products], $message);
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
