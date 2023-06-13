@@ -64,7 +64,6 @@ Route::group(['namespace' => 'App\Http\Controllers\Api'], function () {
             Route::resource('note', 'NoteController');
         });
 
-
         Route::group(['prefix' => 'cart'], function () {
             Route::post('add/product', 'CartController@store');
             Route::post('add/bulk/product', 'CartController@bulkStore');

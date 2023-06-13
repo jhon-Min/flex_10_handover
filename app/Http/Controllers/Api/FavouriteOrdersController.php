@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use Auth;
-use Response;
-use App\Order;
-use Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Validator;
+use App\Models\Order;
+use App\Models\FavouriteOrders;
 use Carbon\Carbon;
-use App\FavouriteOrders;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\BaseController;
 
 class FavouriteOrdersController extends BaseController
@@ -158,7 +157,7 @@ class FavouriteOrdersController extends BaseController
         try {
             $paginate = $request->input('paginate', true);
             $per_page = ($request->per_page) ? $request->per_page : 15;
-            $favrite_orders = FavouriteOrders::where('user_id',Auth::user()->id)->with([
+            $favrite_orders = FavouriteOrders::where('user_id', Auth::user()->id)->with([
                 'order',
                 'order.user',
                 'order.items',
@@ -169,15 +168,15 @@ class FavouriteOrdersController extends BaseController
                 'order.items.product.vehicles.model',
                 'order.items.product.images',
                 'order.items.product.categories',
-                ]);
-                
+            ]);
+
             if (isset($request->order_number) && !empty($request->order_number)) {
-                $favrite_orders->whereHas('order',function ($orders) use ($request) {
+                $favrite_orders->whereHas('order', function ($orders) use ($request) {
                     $orders->where('order_number', 'like', '%' . $request->order_number . '%');
                     $orders->orWhere('reference_number', 'like', '%' . $request->order_number . '%');
                 });
             }
- 
+
             $start = '';
             $end = '';
 
@@ -199,7 +198,7 @@ class FavouriteOrdersController extends BaseController
             });
 
 
-            if($paginate) {
+            if ($paginate) {
                 $favrite_orders = $favrite_orders->paginate($per_page);
             } else {
                 $favrite_orders = $favrite_orders->get();
@@ -231,23 +230,23 @@ class FavouriteOrdersController extends BaseController
         try {
             $validator = Validator::make($request->all(), [
                 "order_id" => "required|exists:orders,id|unique:favourite_orders,order_id",
-            ],['order_id.unique' => 'Aleady Added to favourite']);
+            ], ['order_id.unique' => 'Aleady Added to favourite']);
 
             if ($validator->fails()) {
                 return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
-            $order = Order::where('id', $request->order_id)->where('user_id',Auth::user()->id)->first();
-            if(isset($order->id) && !empty($order->id)) {
+            $order = Order::where('id', $request->order_id)->where('user_id', Auth::user()->id)->first();
+            if (isset($order->id) && !empty($order->id)) {
                 $favourite = [
-                    'order_id'=> $order->id,
-                    'user_id'=> Auth::user()->id,
+                    'order_id' => $order->id,
+                    'user_id' => Auth::user()->id,
                 ];
                 $save_favrite = FavouriteOrders::create($favourite);
-                if(isset($save_favrite->id)) {
+                if (isset($save_favrite->id)) {
                     return $this->sendResponse($save_favrite, "Order added to favourite");
                 }
             }
-            return $this->sendError("You are not authorise to add this order to favourite",[], 401);
+            return $this->sendError("You are not authorise to add this order to favourite", [], 401);
         } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
@@ -269,17 +268,17 @@ class FavouriteOrdersController extends BaseController
         try {
             $validator = Validator::make(['order_id' => $order_id], [
                 "order_id" => "required|exists:favourite_orders,order_id",
-            ],['order_id.exists' => 'Order no longer exists in your favorit list.']);
+            ], ['order_id.exists' => 'Order no longer exists in your favorit list.']);
 
             if ($validator->fails()) {
                 return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
-            $order = FavouriteOrders::where('order_id', $order_id)->where('user_id',Auth::user()->id)->delete();
-            
-            if($order) {
+            $order = FavouriteOrders::where('order_id', $order_id)->where('user_id', Auth::user()->id)->delete();
+
+            if ($order) {
                 return $this->sendResponse([], "Order removed from favourite");
             }
-            return $this->sendError("You are not authorise to add this order to favourite",[], 401);
+            return $this->sendError("You are not authorise to add this order to favourite", [], 401);
         } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);

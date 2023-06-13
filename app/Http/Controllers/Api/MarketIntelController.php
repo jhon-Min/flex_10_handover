@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use Validator;
-use App\MarketIntel;
+use App\Models\MarketIntel;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\BaseController;
+use Illuminate\Support\Facades\Validator;
 
 class MarketIntelController extends BaseController
 {
@@ -62,7 +61,7 @@ class MarketIntelController extends BaseController
                 return $this->sendError('Invalid input', $validator->errors()->all(), 401);
             }
             $per_page = ($request->per_page) ? $request->per_page : 15;
-            if($paginate) {
+            if ($paginate) {
                 $market_intels = MarketIntel::orderBy('id', 'DESC')->paginate($per_page);
             } else {
                 $market_intels = MarketIntel::orderBy('id', 'DESC')->get();

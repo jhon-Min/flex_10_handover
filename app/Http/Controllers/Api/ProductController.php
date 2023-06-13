@@ -2,21 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use Auth;
-use JWTAuth;
-use Config;
-use Storage;
-use Validator;
-use App\Product;
-use App\ProductQuantity;
-use App\Branch;
+use App\Models\Product;
+use App\Models\ProductQuantity;
+use App\Models\Branch;
 use Illuminate\Http\Request;
-use Ixudra\Curl\Facades\Curl;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\BaseController;
 use App\Repositories\ProductsRepository;
-use Symfony\Component\Console\Input\Input;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends BaseController
 {
@@ -26,6 +19,9 @@ class ProductController extends BaseController
      *
      * @return void
      */
+
+    public $productsrepository, $PRODUCTS_PATH;
+
     public function __construct(ProductsRepository $productsrepository)
     {
         $this->productsrepository = $productsrepository;
@@ -63,14 +59,14 @@ class ProductController extends BaseController
      * 
      */
     public function index(Request $request)
-    {       
+    {
 
-        try{ 
+        try {
             $paginate = $request->input('paginate', true);
 
-            $validator = \Validator::make($request->all(), [
+            $validator = Validator::make($request->all(), [
                 "brand_id" => "integer|exists:brands,id",
-                "category_id" => "integer|exists:categories,id",                
+                "category_id" => "integer|exists:categories,id",
                 "products" => "array",
                 "products.*" => "integer|exists:products,id",
                 "paginate" => "boolean",
@@ -78,19 +74,17 @@ class ProductController extends BaseController
                 "sort_order" => "string|in:ASC,DESC,asc,desc"
             ]);
 
-            if($validator->fails()) {
-                return $this->sendError('Invalid input', $validator->errors()->all(),401);
+            if ($validator->fails()) {
+                return $this->sendError('Invalid input', $validator->errors()->all(), 401);
             }
 
             $products = $this->productsrepository->getProducts($request->all(), $paginate, $request->page, $request->per_page);
 
             return $this->sendResponse($products, "Products");
-
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
-
     }
 
     /**
@@ -103,19 +97,19 @@ class ProductController extends BaseController
      * 
      */
     public function show($id)
-    {    
-        
-        $validator = Validator::make(['id' => $id],[
+    {
+
+        $validator = Validator::make(['id' => $id], [
             "id" => "required|exists:products"
         ]);
- 
-        try{     
-            if($validator->fails()) {
-                return $this->sendError("validation errors", $validator->errors()->all(), 400);    
+
+        try {
+            if ($validator->fails()) {
+                return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
-            $product = Product::with(['brand','vehicles','vehicles.make','vehicles.model','images','categories','notes','criteria'])->find($id)->toArray();
-            
-            if($product['associated_part_numbers']) {
+            $product = Product::with(['brand', 'vehicles', 'vehicles.make', 'vehicles.model', 'images', 'categories', 'notes', 'criteria'])->find($id)->toArray();
+
+            if ($product['associated_part_numbers']) {
                 $product['associated_parts'] = $this->productsrepository->getAssociatedProducts(explode(",", $product['associated_part_numbers']));
             } else {
                 $product['associated_parts'] = [];
@@ -124,39 +118,38 @@ class ProductController extends BaseController
             $qty_with_location = array();
             $branchWiseQty = ProductQuantity::where('product_id', $product['id'])->get();
             $branchWiseQtyForPush = array();
-            foreach($branchWiseQty as &$branchQty){
+            foreach ($branchWiseQty as &$branchQty) {
                 $branch = Branch::where('id', $branchQty->branch_id)->first();
                 $branchQty['branch'] = $branch;
                 array_push($branchWiseQtyForPush, $branchQty);
             }
             $product['qty_with_location'] = $branchWiseQtyForPush;
-            
-            return $this->sendResponse($product, "Product details");
 
-        } catch(\Exception $e) {
+            return $this->sendResponse($product, "Product details");
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
     }
-	
-	public function searchbysku($sku)
-    {    
-        
-        $validator = Validator::make(['sku' => $sku],[
+
+    public function searchbysku($sku)
+    {
+
+        $validator = Validator::make(['sku' => $sku], [
             "sku" => "required"
         ]);
- 
-        try{     
-            if($validator->fails()) {
-                return $this->sendError("validation errors", $validator->errors()->all(), 400);    
+
+        try {
+            if ($validator->fails()) {
+                return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
-            $product = Product::with(['brand','vehicles','vehicles.make','vehicles.model','images','categories','notes','criteria'])->where('company_sku', $sku)->first();
-            
-			if(empty($product)){
-				return $this->sendResponse('',"Product not found!");    
-			}
-			
-            if($product['associated_part_numbers']) {
+            $product = Product::with(['brand', 'vehicles', 'vehicles.make', 'vehicles.model', 'images', 'categories', 'notes', 'criteria'])->where('company_sku', $sku)->first();
+
+            if (empty($product)) {
+                return $this->sendResponse('', "Product not found!");
+            }
+
+            if ($product['associated_part_numbers']) {
                 $product['associated_parts'] = $this->productsrepository->getAssociatedProducts(explode(",", $product['associated_part_numbers']));
             } else {
                 $product['associated_parts'] = [];
@@ -165,16 +158,15 @@ class ProductController extends BaseController
             $qty_with_location = array();
             $branchWiseQty = ProductQuantity::where('product_id', $product['id'])->get();
             $branchWiseQtyForPush = array();
-            foreach($branchWiseQty as &$branchQty){
+            foreach ($branchWiseQty as &$branchQty) {
                 $branch = Branch::where('id', $branchQty->branch_id)->first();
                 $branchQty['branch'] = $branch;
                 array_push($branchWiseQtyForPush, $branchQty);
             }
             $product['qty_with_location'] = $branchWiseQtyForPush;
-            
-            return $this->sendResponse($product, "Product details");
 
-        } catch(\Exception $e) {
+            return $this->sendResponse($product, "Product details");
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }

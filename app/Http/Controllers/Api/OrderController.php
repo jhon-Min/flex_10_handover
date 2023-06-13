@@ -2,34 +2,30 @@
 
 namespace App\Http\Controllers\Api;
 
-use DB;
-use PDF;
-use Auth;
-use Mail;
-use File;
-use View;
-use Helper;
-use Config;
-use Storage;
-use App\User;
-use App\Cart;
-use Response;
-use Validator;
-use App\Order;
-use App\FavouriteOrders;
-use Carbon\Carbon;
-use App\OrderProduct;
-use App\PickupAddress;
-use App\DeliveryAddress;
-use App\PickupLocation;
-use App\Product;
+use Illuminate\Support\Facades\Auth;
+use App\Helpers\Helper;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use App\Models\Cart;
+use App\Models\Order;
+use App\Models\FavouriteOrders;
+use App\Models\OrderProduct;
+use App\Models\PickupAddress;
+use App\Models\DeliveryAddress;
+use App\Models\PickupLocation;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Repositories\OrdersRepository;
 use App\Http\Controllers\BaseController;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends BaseController
 {
+    public $ordersrepository, $INVOICES_PATH, $GST, $DELIVERY_CHARGES;
+
     public function __construct(OrdersRepository $ordersrepository)
     {
         $this->ordersrepository = $ordersrepository;
@@ -274,7 +270,7 @@ class OrderController extends BaseController
         //
         try {
             $paginate = $request->input('paginate', true);
-            $validator = \Validator::make($request->all(), [
+            $validator = Validator::make($request->all(), [
                 "order_number" => "sometimes|required",
                 "from_date" => "sometimes|required|date|date_format:Y-m-d",
                 "to_date" => "sometimes|required|date|date_format:Y-m-d",
@@ -288,8 +284,7 @@ class OrderController extends BaseController
             $orders = $this->ordersrepository->getOrders($request->all(), $paginate, $request->page, $request->per_page);
 
             return $this->sendResponse($orders, "Your Orders!");
-
-        }  catch (\Exception $e) {
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
@@ -350,7 +345,7 @@ class OrderController extends BaseController
         $method_rules = [
             "delivery_method" => "required|in:1,2,3"
         ];
-        if( $request->get('delivery_method') == 3 || $request->get('delivery_method') == 1 ) {
+        if ($request->get('delivery_method') == 3 || $request->get('delivery_method') == 1) {
             $delivery_rules = [
                 "delivery.first_name" => "required|min:2",
                 "delivery.last_name" => "required|min:2",
@@ -374,7 +369,7 @@ class OrderController extends BaseController
                 "pickup.products.*" => "required|exists:products,id",
             ];
         }
-        $validator = Validator::make($request->all(), array_merge($method_rules,$delivery_rules, $pickup_rules), ['delivery.zip.required' => 'Postal Code is Required.', 'delivery.zip.regex' => 'Postal Code format is invalid.']);
+        $validator = Validator::make($request->all(), array_merge($method_rules, $delivery_rules, $pickup_rules), ['delivery.zip.required' => 'Postal Code is Required.', 'delivery.zip.regex' => 'Postal Code format is invalid.']);
 
         try {
 
@@ -401,7 +396,7 @@ class OrderController extends BaseController
                 $order = Order::create($order_data);
                 $order_number = orderNumber($order->id);
 
-                if($request->delivery_method == 1 || $request->delivery_method == 3){
+                if ($request->delivery_method == 1 || $request->delivery_method == 3) {
                     $delivery_address =  [
                         'user_id' => $user->id,
                         'first_name' => $request['delivery']['first_name'],
@@ -417,19 +412,18 @@ class OrderController extends BaseController
 
                     $delivery_save = DeliveryAddress::create($delivery_address);
                     $delivery_address_id = $delivery_save->id;
-
                 } else {
-                  $delivery_address = [];
+                    $delivery_address = [];
                 }
 
-                if($request['pickup']['location'] && $request['pickup']['location'] != 9999 && ( $request->delivery_method == 2 || $request->delivery_method == 3) ) {
+                if ($request['pickup']['location'] && $request['pickup']['location'] != 9999 && ($request->delivery_method == 2 || $request->delivery_method == 3)) {
                     $pickup_address = [
                         'user_id' => $user->id,
                         'pickup_location_id' => $request['pickup']['location'],
                         'first_name' => $request['pickup']['first_name'],
                         'last_name' => $request['pickup']['last_name'],
                         'mobile' => $request['pickup']['mobile'],
-                        'pickup_date_time' => date('Y-m-d H:i',strtotime($request['pickup']['date'] . $request['pickup']['time'])),
+                        'pickup_date_time' => date('Y-m-d H:i', strtotime($request['pickup']['date'] . $request['pickup']['time'])),
                     ];
                     $pickup_save = PickupAddress::create($pickup_address);
                     $pickup_address_id = $pickup_save->id;
@@ -438,7 +432,7 @@ class OrderController extends BaseController
                 $product_quntities_to_reduce = [];
 
                 foreach ($cart as $item) {
-                    if($item->product->qty < $item->qty) {
+                    if ($item->product->qty < $item->qty) {
                         $order->status = Config::get('constant.BACK_ORDER_STATUS_ID');
                     }
                     $item_price = $item->product->price_nett * $item->qty;
@@ -452,7 +446,7 @@ class OrderController extends BaseController
                         'item_price' => number_format((float)$item_price, 2, '.', '')
                     ];
 
-                    if(isset($request['delivery']['products']) && is_array($request['delivery']['products']) && in_array($item->product->id, $request['delivery']['products'])){
+                    if (isset($request['delivery']['products']) && is_array($request['delivery']['products']) && in_array($item->product->id, $request['delivery']['products'])) {
 
                         $order_products = [
                             'product_id' => $item->product->id,
@@ -500,7 +494,7 @@ class OrderController extends BaseController
                 $order->save();
 
                 //Reduce product quantity based on order if status is not back order
-                if($order->status != Config::get('constant.BACK_ORDER_STATUS_ID') && count($product_quntities_to_reduce) > 0) {
+                if ($order->status != Config::get('constant.BACK_ORDER_STATUS_ID') && count($product_quntities_to_reduce) > 0) {
                     foreach ($product_quntities_to_reduce as $product_id => $qty) {
                         $product_obj = Product::find($product_id);
                         $product_obj->qty = $product_obj->qty - $qty;
@@ -510,13 +504,13 @@ class OrderController extends BaseController
 
                 //send admin emails state wise
                 $admin_emails = [];
-                if (isset($delivery_address) && isset($delivery_address['state']) && config('constant.ADMINISTRATOR_EMAIL_'.$delivery_address['state'])) {
-                    $admin_emails[] = config('constant.ADMINISTRATOR_EMAIL_'.$delivery_address['state']);
+                if (isset($delivery_address) && isset($delivery_address['state']) && config('constant.ADMINISTRATOR_EMAIL_' . $delivery_address['state'])) {
+                    $admin_emails[] = config('constant.ADMINISTRATOR_EMAIL_' . $delivery_address['state']);
                 }
 
                 if (isset($pickup_address)) {
                     $location = PickupLocation::find($pickup_address['pickup_location_id']);
-                    if($location && config('constant.ADMINISTRATOR_EMAIL_' . $location->state)){
+                    if ($location && config('constant.ADMINISTRATOR_EMAIL_' . $location->state)) {
                         $admin_emails[] = config('constant.ADMINISTRATOR_EMAIL_' . $location->state);
                     }
                 }
@@ -603,81 +597,80 @@ class OrderController extends BaseController
     {
         //
         try {
-            $request->merge(['order' => $id ]);
+            $request->merge(['order' => $id]);
             $validator = Validator::make($request->all(), [
                 "order" => "required|exists:orders,id",
-				//"reference_number" => "sometimes|required|min:2",
+                //"reference_number" => "sometimes|required|min:2",
             ]);
-			
+
             if ($validator->fails()) {
                 return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
-			
-            $order = Order::where('id',$request->id)->where('user_id',Auth::user()->id)->first();
-			
-			$delivery_address = DeliveryAddress::where('user_id',Auth::user()->id)->first();
-			$pickup_address = PickupAddress::where('user_id',Auth::user()->id)->first();
-			
-			
+
+            $order = Order::where('id', $request->id)->where('user_id', Auth::user()->id)->first();
+
+            $delivery_address = DeliveryAddress::where('user_id', Auth::user()->id)->first();
+            $pickup_address = PickupAddress::where('user_id', Auth::user()->id)->first();
+
+
             $order->reference_number = $request->reference_number;
             $order->save();
-			
-			$order = Order::where('id',$request->id)->where('user_id',Auth::user()->id)->first();
-			$user = Auth::user();
-			$pdf_data = $this->pdfGenerate($order, $user);
-			
-			$order->invoice = $pdf_data['file_name'];
-			$order->save();
+
+            $order = Order::where('id', $request->id)->where('user_id', Auth::user()->id)->first();
+            $user = Auth::user();
+            $pdf_data = $this->pdfGenerate($order, $user);
+
+            $order->invoice = $pdf_data['file_name'];
+            $order->save();
 
             // get state from user for admin emails
             $user_state = $user->state;
-			
-			//send admin emails state wise
-			$admin_emails = [];
-			// if (isset($delivery_address) && isset($delivery_address->state) && config('constant.ADMINISTRATOR_EMAIL_'.$delivery_address->state)) {
-			// 	$admin_emails[] = config('constant.ADMINISTRATOR_EMAIL_'.$delivery_address->state);
-			// }
 
-			// if (isset($pickup_address)) {
-			// 	$location = PickupLocation::find($pickup_address->pickup_location_id);
-			// 	if($location && config('constant.ADMINISTRATOR_EMAIL_' . $location->state)){
-			// 		$admin_emails[] = config('constant.ADMINISTRATOR_EMAIL_' . $location->state);
-			// 	}
-			// }
+            //send admin emails state wise
+            $admin_emails = [];
+            // if (isset($delivery_address) && isset($delivery_address->state) && config('constant.ADMINISTRATOR_EMAIL_'.$delivery_address->state)) {
+            // 	$admin_emails[] = config('constant.ADMINISTRATOR_EMAIL_'.$delivery_address->state);
+            // }
+
+            // if (isset($pickup_address)) {
+            // 	$location = PickupLocation::find($pickup_address->pickup_location_id);
+            // 	if($location && config('constant.ADMINISTRATOR_EMAIL_' . $location->state)){
+            // 		$admin_emails[] = config('constant.ADMINISTRATOR_EMAIL_' . $location->state);
+            // 	}
+            // }
 
             if (isset($user_state)) {
-                if(config('constant.ADMINISTRATOR_EMAIL_' . $user_state)){
+                if (config('constant.ADMINISTRATOR_EMAIL_' . $user_state)) {
                     $admin_emails[] = config('constant.ADMINISTRATOR_EMAIL_' . $user_state);
                 }
             }
 
-			// mail to admin
-			$mail_attributes = [
-				'mail_template' => "invoice.invoice_pdf",
-				'mail_to_email' => (count($admin_emails) > 0) ? $admin_emails : config('app.administrator_email_generic'),
-				'mail_to_name' => config('app.mail_from_name'),
-				'mail_subject' => "FlexibleDrive : New Order Received!",
-				'mail_body' => [
-					'order' => $order,
-					'is_for_admin' => 1,
-				],
-				'mail_attachement' => [
-					'file_full_path' => $pdf_data['invoice_path'],
-					'file_name' => $pdf_data['file_name'],
-					'file_mime' => 'application/pdf',
-				],
-			];
-			Helper::sendEmail($mail_attributes);
+            // mail to admin
+            $mail_attributes = [
+                'mail_template' => "invoice.invoice_pdf",
+                'mail_to_email' => (count($admin_emails) > 0) ? $admin_emails : config('app.administrator_email_generic'),
+                'mail_to_name' => config('app.mail_from_name'),
+                'mail_subject' => "FlexibleDrive : New Order Received!",
+                'mail_body' => [
+                    'order' => $order,
+                    'is_for_admin' => 1,
+                ],
+                'mail_attachement' => [
+                    'file_full_path' => $pdf_data['invoice_path'],
+                    'file_name' => $pdf_data['file_name'],
+                    'file_mime' => 'application/pdf',
+                ],
+            ];
+            Helper::sendEmail($mail_attributes);
 
-			//mail to user
-			$mail_attributes['mail_template'] = "emails.order_confirmation";
-			$mail_attributes['mail_to_email'] =  $order->user->email;
-			$mail_attributes['mail_subject'] =  'Flexible Drive : Your Order';
-			$mail_attributes['mail_body']['is_for_admin'] = 0;
-			Helper::sendEmail($mail_attributes);
-			
+            //mail to user
+            $mail_attributes['mail_template'] = "emails.order_confirmation";
+            $mail_attributes['mail_to_email'] =  $order->user->email;
+            $mail_attributes['mail_subject'] =  'Flexible Drive : Your Order';
+            $mail_attributes['mail_body']['is_for_admin'] = 0;
+            Helper::sendEmail($mail_attributes);
+
             return $this->sendResponse($order, "Reference number updated to order!");
-
         } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
@@ -753,7 +746,7 @@ class OrderController extends BaseController
                 return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
             $order = Order::where('id', $order_id)->whereIn('status', ['0', '4'])->where('user_id', Auth::user()->id)->first();
-            if(isset($order->id)) {
+            if (isset($order->id)) {
 
                 $user = User::find($order->user_id);
 
@@ -761,7 +754,7 @@ class OrderController extends BaseController
                     'mail_template' => "emails.order_cancel",
                     'mail_to_email' => config('app.administrator_email'),
                     'mail_to_name' => config('app.mail_from_name'),
-                    'mail_subject' => "FlexibleDrive : Order Deleted - ". $order->order_number,
+                    'mail_subject' => "FlexibleDrive : Order Deleted - " . $order->order_number,
                     'mail_body' => [
                         'order' => $order,
                         'action' => 'Deleted',
@@ -774,10 +767,10 @@ class OrderController extends BaseController
                 $order->favourite->delete();
             }
 
-            if($is_delete) {
+            if ($is_delete) {
                 return $this->sendResponse($order, "Order Deleted!");
             } else {
-                return $this->sendError("cannot delete this order.",[]);
+                return $this->sendError("cannot delete this order.", []);
             }
         } catch (\Exception $e) {
 
@@ -803,14 +796,14 @@ class OrderController extends BaseController
             $exists = implode(',', $orders);
             $is_delete = [];
             $validator = Validator::make($request->all(), [
-                "orders.*" => "required|in:".$exists,
+                "orders.*" => "required|in:" . $exists,
             ]);
             if ($validator->fails()) {
                 return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
             $orders =  Order::whereIn('id', $request->orders)->whereIn('status', ['0', '4'])->get();
 
-            $order_numbers = implode(',',$orders->pluck('order_number')->toArray());
+            $order_numbers = implode(',', $orders->pluck('order_number')->toArray());
 
             $orders_delete = Order::whereIn('id', $request->orders)->whereIn('status', ['0', '4'])->delete();
             FavouriteOrders::whereIn('order_id', $request->orders)->delete();
@@ -830,7 +823,7 @@ class OrderController extends BaseController
             if ($orders_delete > 0) {
                 return $this->sendResponse([], "Order Deleted!");
             } else {
-                return $this->sendError("orders having status Processing, Delivering or Completed cannot be deleted.",[]);
+                return $this->sendError("orders having status Processing, Delivering or Completed cannot be deleted.", []);
             }
         } catch (\Exception $e) {
 
@@ -843,7 +836,7 @@ class OrderController extends BaseController
 
         // return View::make('invoice.invoice_pdf', ['cart' => $cart, 'user' => $user]);
 
-        $pdf = PDF::loadView('invoice.invoice_pdf', ['order' => $order_data, 'user' => $user]);
+        $pdf = Pdf::loadView('invoice.invoice_pdf', ['order' => $order_data, 'user' => $user]);
 
         $content = $pdf->download()->getOriginalContent();
 
@@ -876,33 +869,34 @@ class OrderController extends BaseController
      *      "message": "Invoices Link"
      * }
      */
-    public function export(Request $request) {
+    public function export(Request $request)
+    {
         try {
-            $orders = Order::where('user_id',Auth::user()->id)->pluck('id')->toArray();
+            $orders = Order::where('user_id', Auth::user()->id)->pluck('id')->toArray();
             $exists = implode(',', $orders);
             $validator = Validator::make($request->all(), [
                 'orders' => 'required',
-                'orders.*' => 'required|in:'. $exists,
-            ],['orders.*.required' => 'The orders field is required.']);
+                'orders.*' => 'required|in:' . $exists,
+            ], ['orders.*.required' => 'The orders field is required.']);
             if ($validator->fails()) {
                 return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
 
-            $orders = Order::whereIn('id', $request->orders)->with(['user','items', 'items.product'])->get();
+            $orders = Order::whereIn('id', $request->orders)->with(['user', 'items', 'items.product'])->get();
 
             foreach ($orders as $order) {
                 $order_data = [];
-                if(isset($order->items) && $order->items->count() > 0) {
+                if (isset($order->items) && $order->items->count() > 0) {
 
                     foreach ($order->items as $item) {
 
                         $order_data['products'][] = [
-                                'product_nr' => $item->product->product_nr,
-                                'name' => $item->product->name,
-                                'qty' => $item->qty,
-                                'price' => number_format((float) $item->price, 2, '.', ''),
-                                'item_price' => number_format((float) $item->total, 2, '.', '')
-                            ];
+                            'product_nr' => $item->product->product_nr,
+                            'name' => $item->product->name,
+                            'qty' => $item->qty,
+                            'price' => number_format((float) $item->price, 2, '.', ''),
+                            'item_price' => number_format((float) $item->total, 2, '.', '')
+                        ];
                     }
                     $order_data['order_number'] = $order->order_number;
                     $order_data['gst'] = number_format((float) $order->gst, 2, '.', '');
@@ -911,37 +905,32 @@ class OrderController extends BaseController
                     $order_data['total'] = number_format((float)  $order->total, 2, '.', '');
                     $order_data['created_at'] = $order->created_at;
                     $user = $order->user;
-                    if(!isset($order->invoice) || empty($order->invoice) || !Storage::disk('public')->exists($this->INVOICES_PATH . $order->invoice)) {
+                    if (!isset($order->invoice) || empty($order->invoice) || !Storage::disk('public')->exists($this->INVOICES_PATH . $order->invoice)) {
                         $pdf_data = $this->pdfGenerate($order, $user);
                         Order::where('id', $order->id)->update(['invoice' => $pdf_data['file_name']]);
                         $pdf_file = Storage::disk('public')->path($this->INVOICES_PATH . $pdf_data['file_name']);
-
                     }
                 }
-
             }
-            if($orders->count() == 1 && isset($order->invoice) && !empty($order->invoice) && Storage::disk('public')->exists($this->INVOICES_PATH . $order->invoice)) {
+            if ($orders->count() == 1 && isset($order->invoice) && !empty($order->invoice) && Storage::disk('public')->exists($this->INVOICES_PATH . $order->invoice)) {
 
                 $store_path =  $this->INVOICES_PATH . $order->invoice;
                 $message = "Invoice Link";
-
             } else {
 
-                $pdf = PDF::loadView('invoice.invoice_pdf', ['orders' => $orders]);
+                $pdf = Pdf::loadView('invoice.invoice_pdf', ['orders' => $orders]);
                 $content = $pdf->download()->getOriginalContent();
 
-                $file_name = $user->first_name."_".$user->last_name."_invoices_".strtotime(date('Y-m-d H:i:s')).".pdf";
+                $file_name = $user->first_name . "_" . $user->last_name . "_invoices_" . strtotime(date('Y-m-d H:i:s')) . ".pdf";
 
                 $store_path = $this->INVOICES_PATH . $file_name;
 
                 $invoice_save = Storage::disk('public')->put($store_path, $content);
                 $message = "Invoices Link";
-
             }
             $invoice_path = Storage::disk('public')->url($store_path);
 
             return $this->sendResponse(['download_url' => $invoice_path], $message);
-
         } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
@@ -1059,7 +1048,7 @@ class OrderController extends BaseController
                     'mail_template' => "emails.order_cancel",
                     'mail_to_email' => config('app.administrator_email'),
                     'mail_to_name' => config('app.mail_from_name'),
-                    'mail_subject' => "FlexibleDrive : Order Cancelled - ".$order->order_number,
+                    'mail_subject' => "FlexibleDrive : Order Cancelled - " . $order->order_number,
                     'mail_body' => [
                         'order' => $order,
                         'action' => 'Cancelled',
@@ -1067,7 +1056,6 @@ class OrderController extends BaseController
                 ];
                 // mail to admin
                 Helper::sendEmail($mail_attributes);
-
             }
             if ($is_cancel > 0) {
                 return $this->sendResponse($order, "Order Cancelled!");
@@ -1079,5 +1067,4 @@ class OrderController extends BaseController
             return $this->sendError($e->getMessage(), [], 401);
         }
     }
-
 }

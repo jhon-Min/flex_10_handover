@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
-use Auth;
-use Hash;
-use Config;
-use Storage;
-use JWTAuth;
-use App\User;
-use Validator;
-use JWTFactory;
+use App\Models\User;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\BaseController;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends BaseController
 {
+
+    public $USER_IMAGE_PATH;
 
     /**
      * Create a new  instance.
@@ -41,7 +40,7 @@ class UserController extends BaseController
             return $this->sendResponse($user_profile, 'User Profile');
         } catch (\Exception $e) {
             return $this->sendError($e->getMessage(), [], 401);
-        }       
+        }
     }
     /**
      * @group Profile 
@@ -81,7 +80,6 @@ class UserController extends BaseController
     public function store(Request $request)
     {
         try {
-
             $validator = Validator::make($request->all(), [
                 'first_name' => 'required|min:2',
                 'last_name' => 'required|min:2',
@@ -91,32 +89,32 @@ class UserController extends BaseController
                 'state' => 'required',
                 'zip' => 'required|regex:/\b\d{4}\b/',
                 'mobile' => 'required|min:10|regex:/^[0-9+ ]*$/',
-				'email' => 'required|email|unique:users,email,'.Auth::user()->id,
+                'email' => 'required|email|unique:users,email,' . Auth::user()->id,
             ], ['zip.required' => 'Postal Code is Required.', 'zip.regex' => 'Postal Code format is invalid.']);
 
             if ($validator->fails()) {
                 return $this->sendError('Invalid input', $validator->errors()->all(), 401);
             }
-           
+
             $user = User::find(Auth::user()->id);
 
-            if(isset($request->profile_image) && !empty($request->profile_image)) {
+            if (isset($request->profile_image) && !empty($request->profile_image)) {
 
                 $image = $request->profile_image;
                 $image = substr($image, strpos($image, ",") + 1);
-                $imageName = str_random(10) . '.jpg';
-               
+                $imageName =  Str::random(10) . '.jpg';
+
                 $path = $this->USER_IMAGE_PATH . $imageName;
                 $location = Storage::disk('public')->put($path, base64_decode($image));
-                
-                if($location) {
-                    if($user->profile_image) {
+
+                if ($location) {
+                    if ($user->profile_image) {
                         $store_path = $this->USER_IMAGE_PATH . $user->profile_image;
                         Storage::disk('public')->delete($store_path);
                     }
                     $user->profile_image = $imageName;
                 }
-            } 
+            }
 
             $user->first_name = $request->first_name;
             $user->last_name = $request->last_name;
@@ -130,8 +128,6 @@ class UserController extends BaseController
             $user->save();
 
             return $this->sendResponse($user, 'Profile Updated successfully.');
-            
-            
         } catch (\Exception $e) {
             return $this->sendError($e->getMessage(), [], 401);
         }
@@ -146,27 +142,27 @@ class UserController extends BaseController
      * @bodyParam old_password String required password String required password having atlist 1 uppercase, 1 lowercase , 1 number, 1 symbol and minimum 8 character long.  Example:johnDeo@123
      * @bodyParam confirm_password String required Confirm Password Example:johnDeo@123
      */
-    public function passwordUpdate(Request $request) {
+    public function passwordUpdate(Request $request)
+    {
         try {
-            
+
             $validator = Validator::make($request->all(), [
                 'old_password' => 'required|string|max:20',
                 'new_password' => 'required|string|max:20|strong_password|different:old_password',
                 'confirm_password' => 'required|same:new_password'
-            ],['new_password.different' => 'The new password and Current password must be different.']);
+            ], ['new_password.different' => 'The new password and Current password must be different.']);
 
             if ($validator->fails()) {
                 return $this->sendError('Invalid input', $validator->errors()->all(), 401);
             }
 
             $user = User::find(Auth::user()->id);
-             
+
             if (Hash::check($request->old_password, $user->password)) {
                 $user->fill([
                     'password' => Hash::make($request->new_password)
                 ])->save();
                 return $this->sendResponse([], 'Password Updated successfully.');
-
             } else {
                 return $this->sendError('Current password does not match.', [], 401);
             }
@@ -174,6 +170,4 @@ class UserController extends BaseController
             return $this->sendError($e->getMessage(), [], 401);
         }
     }
-
-   
 }

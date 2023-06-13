@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Make;
-use App\Models;
-use App\Vehicle;
+use App\Models\Make;
+use App\Models\Models;
+use App\Models\Vehicle;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\BaseController;
 use App\Repositories\ProductsRepository;
 
@@ -18,9 +17,11 @@ class SearchController extends BaseController
      *
      * @return void
      */
+    public $productsRepository;
+
     public function __construct(ProductsRepository $productsRepository)
     {
-        $this->productsRepository = $productsRepository;        
+        $this->productsRepository = $productsRepository;
     }
 
     /**
@@ -45,14 +46,13 @@ class SearchController extends BaseController
     public function index(Request $request)
     {
         try {
-            
+
             $filters = $request->all();
             //$filters['count'] = true;
             $products = $this->productsRepository->getProducts($filters, false);
             $vehicles = $this->productsRepository->getVehicles($filters, false);
             return $this->sendResponse(['count' => count($products), 'vehicles' => $vehicles], "Products Count");
-
-        }  catch(\Exception $e) {
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
@@ -75,57 +75,57 @@ class SearchController extends BaseController
     public function searchProductsDropdowns(Request $request)
     {
         try {
-             
+
             $filters = $request->all();
             for ($i = 1934; $i <= date('Y'); $i++) {
 
                 $data['years'][] = $i;
             }
             $vehicles = Vehicle::orderBy('id', 'ASC');
-            
-            if(array_key_exists('make_id', $filters) && $filters['make_id'] > 0){
-                $vehicles->where(function($query) use($filters) {
+
+            if (array_key_exists('make_id', $filters) && $filters['make_id'] > 0) {
+                $vehicles->where(function ($query) use ($filters) {
                     $query->where('make_id', $filters['make_id']);
                 });
             }
 
-            if(array_key_exists('model_id', $filters) && $filters['model_id'] > 0){
-                $vehicles->where(function($query) use($filters) {
+            if (array_key_exists('model_id', $filters) && $filters['model_id'] > 0) {
+                $vehicles->where(function ($query) use ($filters) {
                     $query->where('model_id', $filters['model_id']);
                 });
             }
 
-            if(array_key_exists('year', $filters) && $filters['year'] > 0){
-                $vehicles->where(function($query) use($filters) {
-                    $query->where('year_from','<=',$filters['year']);
-                    $query->where('year_to','>=',$filters['year']);
+            if (array_key_exists('year', $filters) && $filters['year'] > 0) {
+                $vehicles->where(function ($query) use ($filters) {
+                    $query->where('year_from', '<=', $filters['year']);
+                    $query->where('year_to', '>=', $filters['year']);
                 });
-            }            
+            }
 
             $data['sub_models'] = array_values(array_unique(array_filter($vehicles->pluck('sub_model')->toArray())));
-            if(array_key_exists('sub_model', $filters) && !empty( $filters['sub_model'])){
-                $vehicles->where(function($query) use($filters) {
+            if (array_key_exists('sub_model', $filters) && !empty($filters['sub_model'])) {
+                $vehicles->where(function ($query) use ($filters) {
                     $query->where('sub_model', $filters['sub_model']);
                 });
             }
 
             $data['chassis_code'] = array_values(array_unique(array_filter($vehicles->pluck('chassis_code')->toArray())));
-            if(array_key_exists('chassis_code', $filters) && !empty( $filters['chassis_code'])){
-                $vehicles->where(function($query) use($filters) {
+            if (array_key_exists('chassis_code', $filters) && !empty($filters['chassis_code'])) {
+                $vehicles->where(function ($query) use ($filters) {
                     $query->where('chassis_code', $filters['chassis_code']);
                 });
             }
 
             $data['engine_code'] = array_values(array_unique(array_filter($vehicles->pluck('engine_code')->toArray())));
-            if(array_key_exists('engine_code', $filters) && !empty( $filters['engine_code'])){
-                $vehicles->where(function($query) use($filters) {
+            if (array_key_exists('engine_code', $filters) && !empty($filters['engine_code'])) {
+                $vehicles->where(function ($query) use ($filters) {
                     $query->where('engine_code', $filters['engine_code']);
                 });
             }
-            
+
             $data['body_type'] = array_values(array_unique(array_filter($vehicles->pluck('body_type')->toArray())));
             return $this->sendResponse($data, "Search Results");
-        }  catch(\Exception $e) {
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
@@ -138,16 +138,16 @@ class SearchController extends BaseController
      *  
      */
     public function makes()
-    { 
+    {
         try {
-            $common_makes = Make::where('is_common','1')->orderBy('name', 'ASC')->get();
+            $common_makes = Make::where('is_common', '1')->orderBy('name', 'ASC')->get();
             $makes = Make::orderBy('name', 'ASC')->get();
             $all_makes = [
                 'common' => $common_makes,
                 'all' => $makes,
             ];
             return $this->sendResponse($all_makes, "Makes");
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
@@ -163,10 +163,9 @@ class SearchController extends BaseController
     {
 
         try {
-            
-            $models = Models::where('make_id', $id)->select('id','name')->get();
+            $models = Models::where('make_id', $id)->select('id', 'name')->get();
             return $this->sendResponse($models, "Models");
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);
         }
