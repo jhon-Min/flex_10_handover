@@ -17,3 +17,5 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+~/.cache/zsh/compcache/DEBS_installed
+~/.cache/zsh/compcache/DEBS_xinstalled
