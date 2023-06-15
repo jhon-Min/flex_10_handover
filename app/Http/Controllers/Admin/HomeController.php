@@ -41,7 +41,7 @@ class HomeController extends Controller
         $data['total_orders'] = Order::count();
         $data['total_users'] =  User::whereHas('roles', function ($query) {
             $query->whereNotIn('name', ['Super Admin', 'Admin']);
-        })->get()->count();
+        })->count();
         $data['total_makes'] = Make::count();
         $data['total_models'] = Models::count();
         $data['total_vehicles'] = Vehicle::count();
