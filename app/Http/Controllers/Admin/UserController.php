@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Helpers\Helper;
+use App\Http\Requests\ChangeActivationUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -104,7 +105,7 @@ class UserController extends Controller
 
         if ($updated) {
             if ($status == 2) {
-                // $user->notify(new AccountApprovedSuccess());
+                $user->notify(new AccountApprovedSuccess());
             } else {
                 $mail_attributes = [
                     'mail_template' => "emails.user_account_notification",
@@ -112,7 +113,7 @@ class UserController extends Controller
                     'mail_to_name' => $user->name,
                     'mail_subject' => "Flexible Drive : Account Update!",
                 ];
-                // Helper::sendEmail($mail_attributes);
+                Helper::sendEmail($mail_attributes);
             }
 
             $badge = Config::get('constant.user_account_status_lables')[$status];
@@ -129,7 +130,7 @@ class UserController extends Controller
         }
     }
 
-    public function softDelete(Request $request)
+    public function softDelete(ChangeActivationUserRequest $request)
     {
         $isActive = $request->input('is_active');
         $isActiveString = "inactivated";
@@ -137,15 +138,6 @@ class UserController extends Controller
             $isActiveString = "activated";
         }
         $id = $request->input('userId');
-        $data = ['id' => $id, 'is_active' => $isActive,];
-        $validator = Validator::make($data, [
-            'id' => 'required|exists:users,id',
-            'is_active' => 'required|in:1,0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['success' => '0', 'message' => $validator->errors()], 401);
-        }
 
         $user = User::find($id);
         $user->is_active = $isActive;
