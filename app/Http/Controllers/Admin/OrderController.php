@@ -116,13 +116,6 @@ class OrderController extends Controller
     public function update(OrderRequest $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                "order" => "required|integer|exists:orders,id",
-                "order_status" => "required|in:0,1,2,3,4",
-            ]);
-            if ($validator->fails()) {
-                return response()->json(['message' => implode('-', $validator->errors()->all())], 401);
-            }
             $order = Order::find($request->order);
             DB::transaction(function () use ($order, $request) {
                 $old_status = $order->status;
