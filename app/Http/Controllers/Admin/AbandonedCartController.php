@@ -20,7 +20,7 @@ class AbandonedCartController extends Controller
      */
     public function index()
     {
-        $ordersQuery =  Cart::with(['user', 'product']);
+        $ordersQuery =  Cart::with(['user']);
         // $ordersQuery->where('status', '=', '6');
         $ordersQuery->groupBy('user_id');
         $orders = $ordersQuery->get();
@@ -100,13 +100,12 @@ class AbandonedCartController extends Controller
 
         $data_return['products'] = $array_products;
 
-        print json_encode($data_return);
-        exit;
+        return response()->json($data_return);
     }
 
     public function getAbandonedCartDatatable(Request $request)
     {
-        $ordersQuery =  Cart::with(['user', 'product']);
+        $ordersQuery =  Cart::with(['user']);
         // $ordersQuery->where('status', '=', '6');
 
         $ordersQuery->groupBy('user_id');
