@@ -132,7 +132,7 @@
             },
             success: function(result) {
                 var order_total = 0;
-                var order_response = JSON.parse(result);
+                var order_response=result;
                 var order_product = order_response.products;
                 var order_user = order_response.user;
                 var str_table = '<div class="cart-header-user"><span>User : ' + order_user.name + '</span><br/><span>Email : ' + order_user.email + '</span><br /><span>Date : ' + order_user.date + '</span></div>';
