@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Requests\StoreMarketIntelRequest;
+use App\Http\Requests\UpdateMarketIntelRequest;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use App\Helpers\Helper;
@@ -79,23 +81,9 @@ class MarketIntelController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreMarketIntelRequest $request)
     {
         try {
-            $rules = [
-                "title" => "required|min:2",
-                "description" => "required|min:2",
-                "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:width=265,height=200",
-                "short_description" => "required|min:2|max:100",
-                //"image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048",
-            ];
-            if (isset($request->url) && !empty($request->url)) {
-                $rules['url'] =  "url";
-            }
-            $validator = Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 5MB']);
-            if ($validator->fails()) {
-                return Redirect::back()->withErrors($validator)->withInput();
-            }
 
             $market_itel = [
                 'title' => $request->title,
@@ -167,31 +155,11 @@ class MarketIntelController extends Controller
      * @param  \App\MarketIntel  $marketIntel
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, MarketIntel $marketIntel)
+    public function update(UpdateMarketIntelRequest $request, MarketIntel $marketIntel)
     {
         try {
             //print_r($request->all());
             //exit;
-
-            $rules = [
-                "market_intel" => "required|exists:market_intels,id",
-                "title" => "required|min:2",
-                "description" => "required|min:2",
-                "short_description" => "required|min:2|max:100",
-            ];
-            if (isset($request->url) && !empty($request->url)) {
-                $rules['url'] =  "url";
-            }
-            if ($request->hasFile('image')) {
-                $rules['image'] =  "image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:max_width=265,max_height=200";
-                //$rules['image'] =  "image|mimes:jpeg,png,jpg,gif,svg|max:2048";
-            }
-
-            $validator = Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 5MB']);
-
-            if ($validator->fails()) {
-                return Redirect::back()->withErrors($validator)->withInput();
-            }
             $market_intel = MarketIntel::find($request->market_intel);
             $market_intel->title = $request->title;
             $market_intel->url = $request->url;
