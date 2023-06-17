@@ -343,7 +343,7 @@ class SearchHistoryController extends Controller
 
         // GET ORDER TOTAL FOR SELECTED TIME PERIOD
         $orderTotalDate = DB::table('orders');
-        $orderTotalDate->select("orders.*");
+        $orderTotalDate->select(DB::raw("COALESCE(SUM(orders.total),0) as total,count(orders.id) as total_count"));
         $orderTotalDate->join('users', 'users.id', '=', 'orders.user_id');
         // $orderTotalDate->groupBy(DB::raw('MONTH(orders.created_at)'));
         // $orderTotalDate->orderBy(DB::raw('MONTH(orders.created_at)'), 'ASC');
@@ -365,12 +365,10 @@ class SearchHistoryController extends Controller
             // $orderTotalDate->where('users.state', '=', $chart_state);
         }
 
-        $current_orders_date = $orderTotalDate->get();
-
+        $current_orders_date = $orderTotalDate->first();
         $order_total_amount = 0;
-
-        foreach ($current_orders_date as $key_order => $value_order) {
-            $order_total_amount += $value_order->total;
+        if($current_orders_date!=null){
+            $order_total_amount += $current_orders_date->total;
         }
 
         $data['search_sort'] = $search_sort;
@@ -395,7 +393,7 @@ class SearchHistoryController extends Controller
 
         $data['total_search'] = $part_number_count + $vehicle_number_count;
         $data['order_total_amount'] = $order_total_amount;
-        $data['order_total_count'] = count($current_orders_date);
+        $data['order_total_count'] = $current_orders_date->total_count;
 
         return view('analytics-dashboard.analytics-dashboard', $data);
     }
