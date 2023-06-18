@@ -118,7 +118,7 @@ class AbandonedCartController extends Controller
                 return $data->user->email;
             })
             ->filterColumn('name', function($query, $keyword) {
-                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name,last_name)'), 'like','%'. $keyword . '%'));
+                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
             })
             ->filterColumn('email', function($query, $keyword) {
                 $query->whereHas('user', fn($q) => $q->where('email','like', '%'. $keyword . '%'));
