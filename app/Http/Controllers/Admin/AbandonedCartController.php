@@ -106,15 +106,15 @@ class AbandonedCartController extends Controller
 
     public function getAbandonedCartDatatable(Request $request)
     {
-        // $ordersQuery =  Cart::query()->with(['user']);
-        $ordersQuery =  DB::table('cart')->leftJoin('users as user',function($join){
-            $join->on('cart.user_id','user.id');
-        })->select([
-            'user.email',
-            'cart.created_at',
-            'cart.user_id',
-            'cart.invoice',
-        ])->addSelect(DB::raw("concat(first_name,' ',last_name) as name"));
+        $ordersQuery =  Cart::query()->with(['user']);
+        // $ordersQuery =  DB::table('cart')->leftJoin('users as user',function($join){
+        //     $join->on('cart.user_id','user.id');
+        // })->select([
+        //     'user.email',
+        //     'cart.created_at',
+        //     'cart.user_id',
+        //     'cart.invoice',
+        // ])->addSelect(DB::raw("concat(first_name,' ',last_name) as name"));
 
         // $ordersQuery->where('status', '=', '6');
 
