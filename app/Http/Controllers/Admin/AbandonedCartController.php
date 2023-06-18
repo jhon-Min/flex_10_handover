@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use \DB;
 
 class AbandonedCartController extends Controller
 {
@@ -115,6 +116,12 @@ class AbandonedCartController extends Controller
             })
             ->editColumn('email', function ($data) {
                 return $data->user->email;
+            })
+            ->filterColumn('name', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name,last_name)'), 'like','%'. $keyword . '%'));
+            })
+            ->filterColumn('email', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where('email','like', '%'. $keyword . '%'));
             })
             // ->editColumn('order_number', function ($data) {
             //     return $data->order_number;
