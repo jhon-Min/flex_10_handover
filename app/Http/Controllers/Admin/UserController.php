@@ -36,9 +36,9 @@ class UserController extends Controller
 
     public function getUserDatatable()
     {
-        $users = User::whereHas('roles', function ($query) {
+        $users = User::query()->whereHas('roles', function ($query) {
             $query->whereNotIn('name', ['Super Admin', 'Admin']);
-        })->orderBy('id', 'DESC')->get();
+        })->orderBy('id', 'DESC');
 
         return Datatables::of($users)
             ->editColumn('name', function ($data) {
@@ -62,7 +62,7 @@ class UserController extends Controller
             ->editColumn('status', function ($data) {
                 return $data->status();
             })
-            ->editColumn('action', function ($data) {
+            ->addColumn('action', function ($data) {
                 if ($data->admin_approval_status == 1) {
                     $url_approve = route('user.update', ['id' => $data->id, 'status' => 2]);
                     $url_decline = route('user.update', ['id' => $data->id, 'status' => 3]);
@@ -81,6 +81,7 @@ class UserController extends Controller
                 }
             })
             ->rawColumns(['name', 'email', 'company_name', 'mobile', 'state', 'zip', 'status', 'action'])
+            ->only(['name', 'email', 'company_name', 'mobile', 'state', 'zip', 'status', 'action'])
             ->make(true);
     }
 

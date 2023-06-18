@@ -105,37 +105,33 @@ class AbandonedCartController extends Controller
 
     public function getAbandonedCartDatatable(Request $request)
     {
-        $ordersQuery =  Cart::with(['user']);
+        $ordersQuery =  Cart::query()->with(['user']);
         // $ordersQuery->where('status', '=', '6');
 
         $ordersQuery->groupBy('user_id');
-
-        $orders = $ordersQuery->get();
-
-        $orders = $ordersQuery->get();
-        return Datatables::of($orders)
+        return Datatables::of($ordersQuery)
             ->editColumn('name', function ($data) {
                 return $data->user->name;
             })
             ->editColumn('email', function ($data) {
                 return $data->user->email;
             })
-            ->editColumn('order_number', function ($data) {
-                return $data->order_number;
-            })
-            ->editColumn('order_status', function ($data) {
-                return $data->status_badge;
-            })
-            ->editColumn('order_total', function ($data) {
-                return number_format((float) $data->total, 2, '.', '');
-            })
-            ->editColumn('delivery_method', function ($data) {
-                return $data->delivery_type;
-            })
-            ->editColumn('order_date', function ($data) {
+            // ->editColumn('order_number', function ($data) {
+            //     return $data->order_number;
+            // })
+            // ->addColumn('order_status', function ($data) {
+            //     return $data->status_badge;
+            // })
+            // ->addColumn('order_total', function ($data) {
+            //     return number_format((float) $data->total, 2, '.', '');
+            // })
+            // ->addColumn('delivery_method', function ($data) {
+            //     return $data->delivery_type;
+            // })
+            ->addColumn('order_date', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
             })
-            ->editColumn('action', function ($data) {
+            ->addColumn('action', function ($data) {
                 $url_delete = route('cart.delete', ['id' => $data->user_id]);
 
                 $store_path = Config::get('constant.INVOICES_PATH') . $data->invoice;
@@ -143,7 +139,8 @@ class AbandonedCartController extends Controller
 
                 return "<a href=\"javascript:void(0);\" onclick=\"cartItemsModal('" . $data->user_id . "')\" class=\"badge badge-info color-white\"><i class=\"la la-eye\"></i></a><a href=\"javascript:void(0);\" title=\"Delete\" onclick=\"confirmation_alert('Order','Delete','" . $url_delete . "')\" class=\"badge badge-danger color-white\"><i class=\"la la-trash\"></i></a>";
             })
-            ->rawColumns(['name', 'email', 'order_total', 'order_date', 'action'])
+            ->rawColumns(['name', 'email', 'order_date', 'action'])
+            ->only(['name', 'email', 'order_date', 'action'])
             ->make(true);
     }
 

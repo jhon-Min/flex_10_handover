@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Yajra\Datatables\Datatables;
+use Yajra\DataTables\Facades\DataTables;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OrderRequest;
 use Illuminate\Support\Facades\DB;
@@ -29,8 +29,8 @@ class OrderController extends Controller
 
     public function getOrderDatatable(Request $request)
     {
-        $orders =  Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC')->get();
-        return Datatables::of($orders)
+        $orders =  Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC');
+        return DataTables::eloquent($orders)
             ->editColumn('name', function ($data) {
                 return $data->user->name;
             })
@@ -52,7 +52,7 @@ class OrderController extends Controller
             ->editColumn('order_date', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
             })
-            ->editColumn('action', function ($data) {
+            ->addColumn('action', function ($data) {
                 $url_delete = route('order.delete', ['id' => $data->id]);
 
                 $store_path = Config::get('constant.INVOICES_PATH') . $data->invoice;
@@ -61,6 +61,7 @@ class OrderController extends Controller
                 return "<a href=\"javascript:void(0);\" onclick=\"orderSatusModal('" . $data->id . "','" . $data->order_number . "','" . $data->status . "')\" class=\"badge badge-info color-white\"><i class=\"la la-edit\"></i></a><a href=\"javascript:void(0);\" title=\"Delete\" onclick=\"confirmation_alert('Order','Delete','" . $url_delete . "')\" class=\"badge badge-danger color-white\"><i class=\"la la-trash\"></i></a><a href=\"javascript:void(0);\" title=\"View Invoice\" class=\"badge badge-warning color-white\" onclick=\"window.open('" . $download_url . "','_blank')\" ><i class=\"la la-eye\"></i></a>";
             })
             ->rawColumns(['name', 'email', 'order_number', 'order_status', 'order_total', 'delivery_method', 'order_date', 'action'])
+            ->only(['name', 'email', 'order_number', 'order_status', 'order_total', 'delivery_method', 'order_date', 'action'])
             ->make(true);
     }
     /**

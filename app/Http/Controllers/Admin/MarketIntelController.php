@@ -31,22 +31,21 @@ class MarketIntelController extends Controller
      */
     public function index()
     {
-        $data['market_intels'] = MarketIntel::orderBy('id', 'DESC')->get();
-        return view('marketintel.market_intel', $data);
+        return view('marketintel.market_intel');
     }
 
     public function getMarketIntelDatatable(Request $requestl)
     {
-        $market_intels = MarketIntel::orderBy('id', 'DESC')->get();
+        $market_intels = MarketIntel::query()->orderBy('id', 'DESC');
         return Datatables::of($market_intels)
-            ->editColumn('image', function ($data) {
+            ->addColumn('image', function ($data) {
                 return "<a class=\"image-popup-link\" href='" . $data->image_url . "'><img  src='" . $data->image_url . "' class=\"image-table-cell\"></a>";
                 //return "<img  src='" . $data->image_url . "' class=\"image-table-cell\">";
             })
             ->editColumn('title', function ($data) {
                 return Str::limit($data->title, 100);
             })
-            ->editColumn('short_description', function ($data) {
+            ->addColumn('short_description', function ($data) {
                 return Str::limit($data->short_description, 100);
             })
             ->editColumn('url', function ($data) {
@@ -55,13 +54,14 @@ class MarketIntelController extends Controller
             ->editColumn('created_at', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
             })
-            ->editColumn('action', function ($data) {
+            ->addColumn('action', function ($data) {
                 $url_delete = route('market-intel.delete', ['id' => $data->id]);
                 $url_edit = route('market-intel.edit', ['id' => $data->id]);
                 return "<a href='" . $url_edit . "' class=\"badge badge-info color-white\"><i class=\"la la-edit\"></i></a>
                 <a href=\"javascript:void(0);\" title=\"Delete\" onclick=\"confirmation_alert('Order','Delete','" . $url_delete . "')\" class=\"badge badge-danger color-white\"><i class=\"la la-trash\"></i></a>";
             })
             ->rawColumns(['image', 'title', 'description', 'url', 'created_at', 'action'])
+            ->only(['image', 'title', 'description', 'url', 'created_at', 'action','short_description'])
             ->make(true);
     }
 
