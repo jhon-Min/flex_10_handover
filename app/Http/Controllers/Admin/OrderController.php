@@ -22,7 +22,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $data['orders'] = Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC')->get();
+        // $data['orders'] = Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC')->get();
         $data['status'] = Config::get('constant.order_status');
         return view('order.orders', $data);
     }
