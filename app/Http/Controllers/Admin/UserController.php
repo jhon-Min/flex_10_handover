@@ -11,6 +11,7 @@ use App\Notifications\AccountApprovedSuccess;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 use Yajra\Datatables\Datatables;
+use \DB;
 
 
 class UserController extends Controller
@@ -44,6 +45,9 @@ class UserController extends Controller
             ->editColumn('name', function ($data) {
                 return $data->name;
             })
+            ->filterColumn('name', function($query, $keyword) {
+                $query->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%');
+            })
             ->editColumn('email', function ($data) {
                 return $data->email;
             })
@@ -61,6 +65,9 @@ class UserController extends Controller
             })
             ->editColumn('status', function ($data) {
                 return $data->status();
+            })
+            ->filterColumn('status', function($query, $keyword) {
+                $query->where(DB::raw('admin_approval_status'), 'like','%'. $keyword . '%');
             })
             ->addColumn('action', function ($data) {
                 if ($data->admin_approval_status == 1) {

@@ -30,12 +30,21 @@ class OrderController extends Controller
     public function getOrderDatatable(Request $request)
     {
         $orders =  Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC');
-        return DataTables::eloquent($orders)
+        return DataTables::of($orders)
             ->editColumn('name', function ($data) {
                 return $data->user->name;
             })
+            ->filterColumn('name', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
+            })
+            ->order('name', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
+            })
             ->editColumn('email', function ($data) {
                 return $data->user->email;
+            })
+            ->filterColumn('email', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where('email','like', '%'. $keyword . '%'));
             })
             ->editColumn('order_number', function ($data) {
                 return $data->order_number;
@@ -43,14 +52,27 @@ class OrderController extends Controller
             ->editColumn('order_status', function ($data) {
                 return $data->status_badge;
             })
+            ->filterColumn('order_status', function($query, $keyword) {
+                // Config::get('constant.order_status_badge')[$this->status]
+                $query->where('status','like', '%'. $keyword . '%');
+            })
             ->editColumn('order_total', function ($data) {
                 return number_format((float) $data->total, 2, '.', '');
+            })
+            ->filterColumn('order_total', function($query, $keyword) {
+                $query->where('total','like', '%'. $keyword . '%');
             })
             ->editColumn('delivery_method', function ($data) {
                 return $data->delivery_type;
             })
+            ->filterColumn('delivery_method', function($query, $keyword) {
+                $query->where('delivery_method','like', '%'. $keyword . '%');
+            })
             ->editColumn('order_date', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
+            })
+            ->filterColumn('order_date', function($query, $keyword) {
+                $query->where('created_at','like', '%'. $keyword . '%');
             })
             ->addColumn('action', function ($data) {
                 $url_delete = route('order.delete', ['id' => $data->id]);

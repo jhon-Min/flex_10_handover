@@ -21,11 +21,11 @@ class AbandonedCartController extends Controller
      */
     public function index()
     {
-        $ordersQuery =  Cart::with(['user']);
-        // $ordersQuery->where('status', '=', '6');
-        $ordersQuery->groupBy('user_id');
-        $orders = $ordersQuery->get();
-        $data['orders'] = $orders;
+        // $ordersQuery =  Cart::with(['user']);
+        // // $ordersQuery->where('status', '=', '6');
+        // $ordersQuery->groupBy('user_id');
+        // $orders = $ordersQuery->get();
+        // $data['orders'] = $orders;
         $data['status'] = Config::get('constant.order_status');
         return view('abandoned-cart.abandoned-cart', $data);
     }
@@ -106,10 +106,19 @@ class AbandonedCartController extends Controller
 
     public function getAbandonedCartDatatable(Request $request)
     {
-        $ordersQuery =  Cart::query()->with(['user']);
+        // $ordersQuery =  Cart::query()->with(['user']);
+        $ordersQuery =  DB::table('cart')->leftJoin('users as user',function($join){
+            $join->on('cart.user_id','user.id');
+        })->select([
+            'user.email',
+            'cart.created_at',
+            'cart.user_id',
+            'cart.invoice',
+        ])->addSelect(DB::raw("concat(first_name,' ',last_name) as name"));
+
         // $ordersQuery->where('status', '=', '6');
 
-        $ordersQuery->groupBy('user_id');
+        $ordersQuery->groupBy('cart.user_id');
         return Datatables::of($ordersQuery)
             ->editColumn('name', function ($data) {
                 return $data->user->name;
