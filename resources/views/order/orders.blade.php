@@ -36,25 +36,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($orders as $order)
-                                <tr id="order_{{$order->id}}">
-                                    <td>{{$order->user->name}}</td>
-                                    <td>{{$order->user->email}}</td>
-                                    <td>{{$order->order_number}}</td>
-                                    <td id="badge_{{$order->id}}">{!!$order->status_badge!!}</td>
-                                    <td>${{number_format((float) $order->total, 2, '.', '')}}</td>
-                                    <td>{!!$order->delivery_type!!}</td>
-                                    <td>{{date('d/m/Y',strtotime($order->created_at))}}</td>
-                                    <td>
-                                        @php
-                                        $url_delete = route('order.delete',['id' => $order->id]);
-                                        @endphp
-                                        <a href="javascript:void(0);" onclick="orderSatusModal('{{$order->id}}','{{$order->order_number}}','{{$order->status}}')" class="badge badge-info color-white"><i class="la la-edit"></i></a>
-                                        <a href="javascript:void(0);" title="Delete" onclick="confirmation_alert('Order','Delete','{{$url_delete}}')" class="badge badge-danger color-white"><i class="la la-trash"></i></a>
-										<a href="javascript:void(0);" title="View Invoice" class="badge badge-warning color-white" ><i class="la la-eye"></i></a>
-                                    </td>
-                                </tr>
-                                @endforeach
+
                             </tbody>
                         </table>
                     </div>

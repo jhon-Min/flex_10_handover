@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use \DB;
 
 class AbandonedCartController extends Controller
 {
@@ -20,11 +21,11 @@ class AbandonedCartController extends Controller
      */
     public function index()
     {
-        $ordersQuery =  Cart::with(['user', 'product']);
-        // $ordersQuery->where('status', '=', '6');
-        $ordersQuery->groupBy('user_id');
-        $orders = $ordersQuery->get();
-        $data['orders'] = $orders;
+        // $ordersQuery =  Cart::with(['user']);
+        // // $ordersQuery->where('status', '=', '6');
+        // $ordersQuery->groupBy('user_id');
+        // $orders = $ordersQuery->get();
+        // $data['orders'] = $orders;
         $data['status'] = Config::get('constant.order_status');
         return view('abandoned-cart.abandoned-cart', $data);
     }
@@ -100,43 +101,53 @@ class AbandonedCartController extends Controller
 
         $data_return['products'] = $array_products;
 
-        print json_encode($data_return);
-        exit;
+        return response()->json($data_return);
     }
 
     public function getAbandonedCartDatatable(Request $request)
     {
-        $ordersQuery =  Cart::with(['user', 'product']);
+        $ordersQuery =  Cart::query()->with(['user']);
+        // $ordersQuery =  DB::table('cart')->leftJoin('users as user',function($join){
+        //     $join->on('cart.user_id','user.id');
+        // })->select([
+        //     'user.email',
+        //     'cart.created_at',
+        //     'cart.user_id',
+        //     'cart.invoice',
+        // ])->addSelect(DB::raw("concat(first_name,' ',last_name) as name"));
+
         // $ordersQuery->where('status', '=', '6');
 
-        $ordersQuery->groupBy('user_id');
-
-        $orders = $ordersQuery->get();
-
-        $orders = $ordersQuery->get();
-        return Datatables::of($orders)
+        $ordersQuery->groupBy('cart.user_id');
+        return Datatables::of($ordersQuery)
             ->editColumn('name', function ($data) {
                 return $data->user->name;
             })
             ->editColumn('email', function ($data) {
                 return $data->user->email;
             })
-            ->editColumn('order_number', function ($data) {
-                return $data->order_number;
+            ->filterColumn('name', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
             })
-            ->editColumn('order_status', function ($data) {
-                return $data->status_badge;
+            ->filterColumn('email', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where('email','like', '%'. $keyword . '%'));
             })
-            ->editColumn('order_total', function ($data) {
-                return number_format((float) $data->total, 2, '.', '');
-            })
-            ->editColumn('delivery_method', function ($data) {
-                return $data->delivery_type;
-            })
-            ->editColumn('order_date', function ($data) {
+            // ->editColumn('order_number', function ($data) {
+            //     return $data->order_number;
+            // })
+            // ->addColumn('order_status', function ($data) {
+            //     return $data->status_badge;
+            // })
+            // ->addColumn('order_total', function ($data) {
+            //     return number_format((float) $data->total, 2, '.', '');
+            // })
+            // ->addColumn('delivery_method', function ($data) {
+            //     return $data->delivery_type;
+            // })
+            ->addColumn('order_date', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
             })
-            ->editColumn('action', function ($data) {
+            ->addColumn('action', function ($data) {
                 $url_delete = route('cart.delete', ['id' => $data->user_id]);
 
                 $store_path = Config::get('constant.INVOICES_PATH') . $data->invoice;
@@ -144,7 +155,8 @@ class AbandonedCartController extends Controller
 
                 return "<a href=\"javascript:void(0);\" onclick=\"cartItemsModal('" . $data->user_id . "')\" class=\"badge badge-info color-white\"><i class=\"la la-eye\"></i></a><a href=\"javascript:void(0);\" title=\"Delete\" onclick=\"confirmation_alert('Order','Delete','" . $url_delete . "')\" class=\"badge badge-danger color-white\"><i class=\"la la-trash\"></i></a>";
             })
-            ->rawColumns(['name', 'email', 'order_total', 'order_date', 'action'])
+            ->rawColumns(['name', 'email', 'order_date', 'action'])
+            ->only(['name', 'email', 'order_date', 'action'])
             ->make(true);
     }
 

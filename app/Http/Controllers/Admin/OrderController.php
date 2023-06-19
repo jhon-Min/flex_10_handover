@@ -8,8 +8,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Yajra\Datatables\Datatables;
+use Yajra\DataTables\Facades\DataTables;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OrderRequest;
 use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
@@ -21,20 +22,29 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $data['orders'] = Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC')->get();
+        // $data['orders'] = Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC')->get();
         $data['status'] = Config::get('constant.order_status');
         return view('order.orders', $data);
     }
 
     public function getOrderDatatable(Request $request)
     {
-        $orders =  Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC')->get();
-        return Datatables::of($orders)
+        $orders =  Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC');
+        return DataTables::of($orders)
             ->editColumn('name', function ($data) {
                 return $data->user->name;
             })
+            ->filterColumn('name', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
+            })
+            ->order('name', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
+            })
             ->editColumn('email', function ($data) {
                 return $data->user->email;
+            })
+            ->filterColumn('email', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where('email','like', '%'. $keyword . '%'));
             })
             ->editColumn('order_number', function ($data) {
                 return $data->order_number;
@@ -42,16 +52,29 @@ class OrderController extends Controller
             ->editColumn('order_status', function ($data) {
                 return $data->status_badge;
             })
+            ->filterColumn('order_status', function($query, $keyword) {
+                // Config::get('constant.order_status_badge')[$this->status]
+                $query->where('status','like', '%'. $keyword . '%');
+            })
             ->editColumn('order_total', function ($data) {
                 return number_format((float) $data->total, 2, '.', '');
+            })
+            ->filterColumn('order_total', function($query, $keyword) {
+                $query->where('total','like', '%'. $keyword . '%');
             })
             ->editColumn('delivery_method', function ($data) {
                 return $data->delivery_type;
             })
+            ->filterColumn('delivery_method', function($query, $keyword) {
+                $query->where('delivery_method','like', '%'. $keyword . '%');
+            })
             ->editColumn('order_date', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
             })
-            ->editColumn('action', function ($data) {
+            ->filterColumn('order_date', function($query, $keyword) {
+                $query->where('created_at','like', '%'. $keyword . '%');
+            })
+            ->addColumn('action', function ($data) {
                 $url_delete = route('order.delete', ['id' => $data->id]);
 
                 $store_path = Config::get('constant.INVOICES_PATH') . $data->invoice;
@@ -60,6 +83,7 @@ class OrderController extends Controller
                 return "<a href=\"javascript:void(0);\" onclick=\"orderSatusModal('" . $data->id . "','" . $data->order_number . "','" . $data->status . "')\" class=\"badge badge-info color-white\"><i class=\"la la-edit\"></i></a><a href=\"javascript:void(0);\" title=\"Delete\" onclick=\"confirmation_alert('Order','Delete','" . $url_delete . "')\" class=\"badge badge-danger color-white\"><i class=\"la la-trash\"></i></a><a href=\"javascript:void(0);\" title=\"View Invoice\" class=\"badge badge-warning color-white\" onclick=\"window.open('" . $download_url . "','_blank')\" ><i class=\"la la-eye\"></i></a>";
             })
             ->rawColumns(['name', 'email', 'order_number', 'order_status', 'order_total', 'delivery_method', 'order_date', 'action'])
+            ->only(['name', 'email', 'order_number', 'order_status', 'order_total', 'delivery_method', 'order_date', 'action'])
             ->make(true);
     }
     /**
@@ -112,16 +136,9 @@ class OrderController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request)
+    public function update(OrderRequest $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                "order" => "required|integer|exists:orders,id",
-                "order_status" => "required|in:0,1,2,3,4",
-            ]);
-            if ($validator->fails()) {
-                return response()->json(['message' => implode('-', $validator->errors()->all())], 401);
-            }
             $order = Order::find($request->order);
             DB::transaction(function () use ($order, $request) {
                 $old_status = $order->status;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Helpers\Helper;
+use App\Http\Requests\ChangeActivationUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -10,6 +11,7 @@ use App\Notifications\AccountApprovedSuccess;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 use Yajra\Datatables\Datatables;
+use \DB;
 
 
 class UserController extends Controller
@@ -35,14 +37,16 @@ class UserController extends Controller
 
     public function getUserDatatable()
     {
-
-        $users = User::whereHas('roles', function ($query) {
+        $users = User::query()->whereHas('roles', function ($query) {
             $query->whereNotIn('name', ['Super Admin', 'Admin']);
-        })->orderBy('id', 'DESC')->get();
+        })->orderBy('id', 'DESC');
 
         return Datatables::of($users)
             ->editColumn('name', function ($data) {
                 return $data->name;
+            })
+            ->filterColumn('name', function($query, $keyword) {
+                $query->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%');
             })
             ->editColumn('email', function ($data) {
                 return $data->email;
@@ -62,7 +66,10 @@ class UserController extends Controller
             ->editColumn('status', function ($data) {
                 return $data->status();
             })
-            ->editColumn('action', function ($data) {
+            ->filterColumn('status', function($query, $keyword) {
+                $query->where(DB::raw('admin_approval_status'), 'like','%'. $keyword . '%');
+            })
+            ->addColumn('action', function ($data) {
                 if ($data->admin_approval_status == 1) {
                     $url_approve = route('user.update', ['id' => $data->id, 'status' => 2]);
                     $url_decline = route('user.update', ['id' => $data->id, 'status' => 3]);
@@ -81,6 +88,7 @@ class UserController extends Controller
                 }
             })
             ->rawColumns(['name', 'email', 'company_name', 'mobile', 'state', 'zip', 'status', 'action'])
+            ->only(['name', 'email', 'company_name', 'mobile', 'state', 'zip', 'status', 'action'])
             ->make(true);
     }
 
@@ -90,7 +98,7 @@ class UserController extends Controller
         $validator = Validator::make($data, [
             'id' => 'required|exists:users,id',
             'status' => 'required|in:1,2,3',
-            // 'account_code' => 'required|string'
+            'account_code' => 'required|string'
         ]);
 
 
@@ -130,7 +138,7 @@ class UserController extends Controller
         }
     }
 
-    public function softDelete(Request $request)
+    public function softDelete(ChangeActivationUserRequest $request)
     {
         $isActive = $request->input('is_active');
         $isActiveString = "inactivated";
@@ -138,16 +146,6 @@ class UserController extends Controller
             $isActiveString = "activated";
         }
         $id = $request->input('userId');
-        $data = ['id' => $id, 'is_active' => $isActive,];
-        $validator = Validator::make($data, [
-            'id' => 'required|exists:users,id',
-            'is_active' => 'required|in:1,0',
-        ]);
-
-
-        if ($validator->fails()) {
-            return response()->json(['success' => '0', 'message' => $validator->errors()], 401);
-        }
 
         $user = User::find($id);
         $user->is_active = $isActive;

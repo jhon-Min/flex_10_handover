@@ -9,6 +9,7 @@ use App\Models\BannerManagement;
 use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreBannerManagementReequest;
 use Illuminate\Support\Facades\Validator;
 
 class BannerManagementController extends Controller
@@ -30,7 +31,7 @@ class BannerManagementController extends Controller
     }
     public function getBannerDatatable(Request $requestl)
     {
-        $banners = BannerManagement::orderBy('id', 'DESC')->get();
+        $banners = BannerManagement::query()->orderBy('id', 'DESC');
         return Datatables::of($banners)
             ->editColumn('image', function ($data) {
                 return "<a class=\"image-popup-link\" href='" . $data->image_url . "'><img  src='" . $data->image_url . "' class=\"img-responsive\"></a>";
@@ -41,9 +42,9 @@ class BannerManagementController extends Controller
                 return "<a href=\"javascript:void(0);\" title=\"Delete\" onclick=\"confirmation_alert('Order','Delete','" . $url_delete . "')\" class=\"badge badge-danger color-white\"><i class=\"la la-trash\"></i></a>";
             })
             ->rawColumns(['image', 'action'])
+            ->only(['image', 'action'])
             ->make(true);
     }
-
     /**
      * Show the form for creating a new resource.
      *
@@ -60,20 +61,9 @@ class BannerManagementController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreBannerManagementReequest $request)
     {
         try {
-
-            $rules = [
-                "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:5120|dimensions:width=1108,height=248",
-                // "image" => "required|image|mimes:jpeg,png,jpg,gif,svg|max:5120",
-            ];
-
-            $validator = Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 2MB']);
-            if ($validator->fails()) {
-                return Redirect::back()->withErrors($validator)->withInput();
-            }
-
             if ($request->hasFile('image')) {
 
                 $file_attribue = [

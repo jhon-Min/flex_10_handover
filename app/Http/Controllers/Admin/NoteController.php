@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use App\Models\Note;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\Datatables\Datatables;
 use App\Http\Controllers\Controller;
 
@@ -22,25 +23,31 @@ class NoteController extends Controller
 
     public function getNoteDatatable(Request $request)
     {
-        $notes = Note::orderBy('id', 'DESC')->get();
+        $notes = Note::query()->with(['product','user'])->orderBy('id', 'DESC');
         return Datatables::of($notes)
-            ->editColumn('date_string', function ($data) {
+            ->addColumn('date_string', function ($data) {
                 return strtotime($data->created_at);
             })
-            ->editColumn('date', function ($data) {
+            ->addColumn('date', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
             })
             ->editColumn('product_nr', function ($data) {
-
                 return $data->product->product_nr;
+            })
+            ->filterColumn('product_nr', function($query, $keyword) {
+                $query->whereHas('product', fn($q) => $q->where(DB::raw('product_nr'), 'like','%'. $keyword . '%'));
             })
             ->editColumn('description', function ($data) {
                 return $data->description;
             })
-            ->editColumn('user', function ($data) {
+            ->addColumn('user', function ($data) {
                 return $data->user->name;
             })
+            ->filterColumn('user', function($query, $keyword) {
+                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
+            })
             ->rawColumns(['date_string', 'date', 'product_nr', 'description', 'user'])
+            ->only(['date_string', 'date', 'product_nr', 'description', 'user'])
             ->make(true);
     }
 

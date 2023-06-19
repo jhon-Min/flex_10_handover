@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\UserRole;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdatePasswordRequest;
+use App\Http\Requests\UpdateProfileRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
@@ -41,22 +43,10 @@ class ProfileController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request)
+    public function update(UpdateProfileRequest $request)
     {
         try {
             $user = User::find(Auth::user()->id);
-            $rules = [
-                "first_name" => "required|min:2",
-                "last_name" => "required|min:2",
-            ];
-            if ($request->hasFile('image')) {
-                $rules["image"] = "required|image|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:max_width=200,max_height=200";
-            }
-            $validator = Validator::make($request->all(), $rules, ['image.dimensions' => 'Please upload image with required dimensions', 'image.max' => 'The image may not be greater than 2MB']);
-            if ($validator->fails()) {
-                return Redirect::back()->withErrors($validator)->withInput()->with('tab', 'profile');
-            }
-
             if ($request->hasFile('image')) {
 
                 $file_attribue = [
@@ -81,20 +71,9 @@ class ProfileController extends Controller
             return Redirect::back()->with(['message' => $e->getMessage(), 'alert-type' => 'success', 'tab' => 'profile'])->withInput($request->all());
         }
     }
-    public function passwordUpdate(Request $request)
+    public function passwordUpdate(UpdatePasswordRequest $request)
     {
         try {
-
-            $validator = Validator::make($request->all(), [
-                'old_password' => 'required|string|max:20',
-                'new_password' => 'required|string|max:20|strong_password|different:old_password',
-                'confirm_password' => 'required|same:new_password'
-            ], ['new_password.different' => 'The new password and Current password must be different.']);
-
-            if ($validator->fails()) {
-                return Redirect::back()->withErrors($validator)->withInput()->with('tab', 'password');
-            }
-
             $user = User::find(Auth::user()->id);
 
             if (Hash::check($request->old_password, $user->password)) {

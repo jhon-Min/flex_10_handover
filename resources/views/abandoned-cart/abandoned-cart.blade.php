@@ -32,20 +32,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($orders as $order)
-                                <tr id="order_{{$order->id}}">
-                                    <td>{{$order->user->name}}</td>
-                                    <td>{{$order->user->email}}</td>
-                                    <td>{{date('d/m/Y',strtotime($order->created_at))}}</td>
-                                    <td>
-                                        @php
-                                        $url_delete = route('order.delete',['id' => $order->id]);
-                                        @endphp
-                                        <a href="javascript:void(0);" title="View Invoice" onclick="cartItemsModal('{{$order->user_id}}')" class="badge badge-warning color-white" ><i class="la la-eye"></i></a>
-                                        <a href="javascript:void(0);" title="Delete" onclick="confirmation_alert('Order','Delete','{{$url_delete}}')" class="badge badge-danger color-white"><i class="la la-trash"></i></a>
-                                    </td>
-                                </tr>
-                                @endforeach
+                                
                             </tbody>
                         </table>
                     </div>
@@ -132,7 +119,7 @@
             },
             success: function(result) {
                 var order_total = 0;
-                var order_response = JSON.parse(result);
+                var order_response=result;
                 var order_product = order_response.products;
                 var order_user = order_response.user;
                 var str_table = '<div class="cart-header-user"><span>User : ' + order_user.name + '</span><br/><span>Email : ' + order_user.email + '</span><br /><span>Date : ' + order_user.date + '</span></div>';
