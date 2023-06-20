@@ -22,7 +22,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        // $data['orders'] = Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC')->get();
+        $data['orders'] = Order::with(['user'])->where('status', '!=', '6')->orderBy('id', 'DESC')->get();
         $data['status'] = Config::get('constant.order_status');
         return view('order.orders', $data);
     }
@@ -34,17 +34,17 @@ class OrderController extends Controller
             ->editColumn('name', function ($data) {
                 return $data->user->name;
             })
-            ->filterColumn('name', function($query, $keyword) {
-                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
+            ->filterColumn('name', function ($query, $keyword) {
+                $query->whereHas('user', fn ($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like', '%' . $keyword . '%'));
             })
-            ->order('name', function($query, $keyword) {
-                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
-            })
+            // ->order('name', function($query, $keyword) {
+            //     $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
+            // })
             ->editColumn('email', function ($data) {
                 return $data->user->email;
             })
-            ->filterColumn('email', function($query, $keyword) {
-                $query->whereHas('user', fn($q) => $q->where('email','like', '%'. $keyword . '%'));
+            ->filterColumn('email', function ($query, $keyword) {
+                $query->whereHas('user', fn ($q) => $q->where('email', 'like', '%' . $keyword . '%'));
             })
             ->editColumn('order_number', function ($data) {
                 return $data->order_number;
@@ -52,27 +52,27 @@ class OrderController extends Controller
             ->editColumn('order_status', function ($data) {
                 return $data->status_badge;
             })
-            ->filterColumn('order_status', function($query, $keyword) {
+            ->filterColumn('order_status', function ($query, $keyword) {
                 // Config::get('constant.order_status_badge')[$this->status]
-                $query->where('status','like', '%'. $keyword . '%');
+                $query->where('status', 'like', '%' . $keyword . '%');
             })
             ->editColumn('order_total', function ($data) {
                 return number_format((float) $data->total, 2, '.', '');
             })
-            ->filterColumn('order_total', function($query, $keyword) {
-                $query->where('total','like', '%'. $keyword . '%');
+            ->filterColumn('order_total', function ($query, $keyword) {
+                $query->where('total', 'like', '%' . $keyword . '%');
             })
             ->editColumn('delivery_method', function ($data) {
                 return $data->delivery_type;
             })
-            ->filterColumn('delivery_method', function($query, $keyword) {
-                $query->where('delivery_method','like', '%'. $keyword . '%');
+            ->filterColumn('delivery_method', function ($query, $keyword) {
+                $query->where('delivery_method', 'like', '%' . $keyword . '%');
             })
             ->editColumn('order_date', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
             })
-            ->filterColumn('order_date', function($query, $keyword) {
-                $query->where('created_at','like', '%'. $keyword . '%');
+            ->filterColumn('order_date', function ($query, $keyword) {
+                $query->where('created_at', 'like', '%' . $keyword . '%');
             })
             ->addColumn('action', function ($data) {
                 $url_delete = route('order.delete', ['id' => $data->id]);
@@ -85,48 +85,6 @@ class OrderController extends Controller
             ->rawColumns(['name', 'email', 'order_number', 'order_status', 'order_total', 'delivery_method', 'order_date', 'action'])
             ->only(['name', 'email', 'order_number', 'order_status', 'order_total', 'delivery_method', 'order_date', 'action'])
             ->make(true);
-    }
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
     }
 
     /**
@@ -167,7 +125,7 @@ class OrderController extends Controller
                 ]
             ];
 
-            Helper::sendEmail($mail_attributes);
+            // Helper::sendEmail($mail_attributes);
             return response()->json(['message' => 'Order is ' . $label], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 401);
@@ -200,10 +158,13 @@ class OrderController extends Controller
                     'action' => 'Deleted',
                 ]
             ];
+            if ($order->favourite) {
+                $order->favourite->delete();
+            }
             $is_delete = $order->delete();
-            $order->favourite->delete();
-            if ($is_delete > 0) {
-                Helper::sendEmail($mail_attributes);
+
+            if ($is_delete) {
+                // Helper::sendEmail($mail_attributes);
                 $response = [
                     'success' => '1',
                     'message' => 'Order has been Deleted',

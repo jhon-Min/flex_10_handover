@@ -45,8 +45,8 @@ class UserController extends Controller
             ->editColumn('name', function ($data) {
                 return $data->name;
             })
-            ->filterColumn('name', function($query, $keyword) {
-                $query->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%');
+            ->filterColumn('name', function ($query, $keyword) {
+                $query->where(DB::raw('concat(first_name," ",last_name)'), 'like', '%' . $keyword . '%');
             })
             ->editColumn('email', function ($data) {
                 return $data->email;
@@ -66,8 +66,8 @@ class UserController extends Controller
             ->editColumn('status', function ($data) {
                 return $data->status();
             })
-            ->filterColumn('status', function($query, $keyword) {
-                $query->where(DB::raw('admin_approval_status'), 'like','%'. $keyword . '%');
+            ->filterColumn('status', function ($query, $keyword) {
+                $query->where(DB::raw('admin_approval_status'), 'like', '%' . $keyword . '%');
             })
             ->addColumn('action', function ($data) {
                 if ($data->admin_approval_status == 1) {
@@ -109,11 +109,12 @@ class UserController extends Controller
         $user = User::find($id);
         $user->admin_approval_status = $status;
         $user->account_code = $request->query('account_code');
-        $updated = $user->save();
+        $updated = $user->update();
+
 
         if ($updated) {
             if ($status == 2) {
-                $user->notify(new AccountApprovedSuccess());
+                // $user->notify(new AccountApprovedSuccess()); // error fix
             } else {
                 $mail_attributes = [
                     'mail_template' => "emails.user_account_notification",
@@ -121,7 +122,7 @@ class UserController extends Controller
                     'mail_to_name' => $user->name,
                     'mail_subject' => "Flexible Drive : Account Update!",
                 ];
-                Helper::sendEmail($mail_attributes);
+                // Helper::sendEmail($mail_attributes); // error fix
             }
 
             $badge = Config::get('constant.user_account_status_lables')[$status];
