@@ -17,8 +17,7 @@ class PartsDBAPIRepository extends BaseRepository
             ->withResponseHeaders()
             ->returnResponseObject()
             ->get();
-
-        Session::put('Auth-Cookie', $response->headers['Set-Cookie']);
+        Session::put('Auth-Cookie', $response->headers['set-cookie']);
     }
 
     public function getAllBrands()
