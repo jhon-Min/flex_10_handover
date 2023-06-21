@@ -35,7 +35,6 @@ class UserController extends Controller
 
     public function update(Request $request, $id, $status)
     {
-        $data = ['id' => $id, 'status' => $status, 'account_code' => $request->query('account_code')];
         return $this->userService->userUpdate($request, $id, $status);
     }
 
