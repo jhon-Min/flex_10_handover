@@ -81,10 +81,14 @@ class Order extends Model
 
         if (!empty($pickup_address)) {
             $address = PickupAddress::with('location')->where('id', $pickup_address)->first()->toArray();
-            if ($pickup_address > 0 && $address["id"] > 0) {
-                $pickup = Branch::where('id', $address["pickup_location_id"])->first()->toArray();
+            if ($address && $address["id"]) {
+                if (Branch::find($address["pickup_location_id"]) != null) {
+                    $pickup = Branch::where('id', $address["pickup_location_id"])->first()->toArray();
+                }
             }
         }
+
+
         $is_external = false;
         if (!empty($pickup_address) && !empty($delivery_address)) {
             $is_external = true;

@@ -21,11 +21,10 @@ class AbandonedCartController extends Controller
      */
     public function index()
     {
-        // $ordersQuery =  Cart::with(['user']);
-        // // $ordersQuery->where('status', '=', '6');
-        // $ordersQuery->groupBy('user_id');
-        // $orders = $ordersQuery->get();
-        // $data['orders'] = $orders;
+        $ordersQuery =  Cart::with(['user']);
+        $ordersQuery->groupBy('user_id');
+        $orders = $ordersQuery->get();
+        $data['orders'] = $orders;
         $data['status'] = Config::get('constant.order_status');
         return view('abandoned-cart.abandoned-cart', $data);
     }
@@ -126,24 +125,24 @@ class AbandonedCartController extends Controller
             ->editColumn('email', function ($data) {
                 return $data->user->email;
             })
-            ->filterColumn('name', function($query, $keyword) {
-                $query->whereHas('user', fn($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like','%'. $keyword . '%'));
+            ->filterColumn('name', function ($query, $keyword) {
+                $query->whereHas('user', fn ($q) => $q->where(DB::raw('concat(first_name," ",last_name)'), 'like', '%' . $keyword . '%'));
             })
-            ->filterColumn('email', function($query, $keyword) {
-                $query->whereHas('user', fn($q) => $q->where('email','like', '%'. $keyword . '%'));
+            ->filterColumn('email', function ($query, $keyword) {
+                $query->whereHas('user', fn ($q) => $q->where('email', 'like', '%' . $keyword . '%'));
             })
-            // ->editColumn('order_number', function ($data) {
-            //     return $data->order_number;
-            // })
-            // ->addColumn('order_status', function ($data) {
-            //     return $data->status_badge;
-            // })
-            // ->addColumn('order_total', function ($data) {
-            //     return number_format((float) $data->total, 2, '.', '');
-            // })
-            // ->addColumn('delivery_method', function ($data) {
-            //     return $data->delivery_type;
-            // })
+            ->editColumn('order_number', function ($data) {
+                return $data->order_number;
+            })
+            ->addColumn('order_status', function ($data) {
+                return $data->status_badge;
+            })
+            ->addColumn('order_total', function ($data) {
+                return number_format((float) $data->total, 2, '.', '');
+            })
+            ->addColumn('delivery_method', function ($data) {
+                return $data->delivery_type;
+            })
             ->addColumn('order_date', function ($data) {
                 return date('d/m/Y', strtotime($data->created_at));
             })
@@ -178,21 +177,7 @@ class AbandonedCartController extends Controller
 
             $is_delete = Cart::where('user_id', $id)->delete();
 
-
-            // $order = Cart::find($id);
-            // $mail_attributes = [
-            //     'mail_template' => "emails.admin_order_action",
-            //     'mail_to_email' => $order->user->email,
-            //     'mail_to_name' => $order->user->name,
-            //     'mail_subject' => "FlexibleDrive : Your Order Deleted",
-            //     'mail_body' => [
-            //         'order' => $order,
-            //         'action' => 'Deleted',
-            //         ]
-            // ];
-            // $is_delete = $order->delete();
-            // $order->favourite->delete();
-            if ($is_delete > 0) {
+            if ($is_delete) {
                 // Helper::sendEmail($mail_attributes);
                 $response = [
                     'success' => '1',
