@@ -21,11 +21,10 @@ class AbandonedCartController extends Controller
      */
     public function index()
     {
-        // $ordersQuery =  Cart::with(['user']);
-        // // $ordersQuery->where('status', '=', '6');
-        // $ordersQuery->groupBy('user_id');
-        // $orders = $ordersQuery->get();
-        // $data['orders'] = $orders;
+        $ordersQuery =  Cart::with(['user']);
+        $ordersQuery->groupBy('user_id');
+        $orders = $ordersQuery->get();
+        $data['orders'] = $orders;
         $data['status'] = Config::get('constant.order_status');
         return view('abandoned-cart.abandoned-cart', $data);
     }
@@ -192,19 +191,5 @@ class AbandonedCartController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 401);
         }
-
-        // $order = Cart::find($id);
-        // $mail_attributes = [
-        //     'mail_template' => "emails.admin_order_action",
-        //     'mail_to_email' => $order->user->email,
-        //     'mail_to_name' => $order->user->name,
-        //     'mail_subject' => "FlexibleDrive : Your Order Deleted",
-        //     'mail_body' => [
-        //         'order' => $order,
-        //         'action' => 'Deleted',
-        //         ]
-        // ];
-        // $is_delete = $order->delete();
-        // $order->favourite->delete();
     }
 }
