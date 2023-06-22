@@ -22,7 +22,7 @@
                     <table style="width: 100%; border-spacing: 0; border-width: 0; padding: 0; border-width: 0;">
                         <tr>
                             <td align="left">
-                                <img src="{{asset('images/logo-colour.png')}}" alt="Flexible Drive" style="max-width: 300px; width: 300px;">
+                                <img src="{{asset('images/logo-colour.png')}}" alt="{{config("mail.mail_team_name")}}" style="max-width: 300px; width: 300px;">
                                 <h2 style="color:#a1a1a1;    font-size: 22px;">
                                     Order received
                                 </h2>
@@ -48,7 +48,7 @@
                                 @else
 
                                 <p>Dear {{$order->user->name}}</p>
-                                <p>Thank you for your order with Flexible Drive.</p>
+                                <p>Thank you for your order with {{config("mail.mail_team_name")}}.</p>
                                 <p>Your order is currently being processed.</p>
                                 <p>Should there be any issues with your order you will be notified directly. Otherwise
                                     your order will be supplied as per the order confirmation below and delivery options
@@ -155,7 +155,7 @@
                             <td>
                                 <p style="margin-top: 0;">
                                     Confirmation of your order will be sent with shipment and invoiced to your account
-                                    as per your terms with Flexible Drive.
+                                    as per your terms with {{config("mail.mail_team_name")}}.
                                 </p>
                             </td>
                         </tr>
@@ -222,7 +222,7 @@
                 </td>
                 @endif
                 <td align=" right" style="padding: 10px 10px; border-top: 3px #ef5324 solid;">
-                    <img src="{{asset('images/footer-logo.png')}}" alt="Flexible Drive" style="width: 50px; max-width: 50px;">
+                    <img src="{{asset('images/footer-logo.png')}}" alt="{{config('mail.mail_team_name')}}" style="width: 50px; max-width: 50px;">
                 </td>
             </tr>
         </tfoot>

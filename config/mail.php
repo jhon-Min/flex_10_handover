@@ -122,4 +122,6 @@ return [
         ],
     ],
 
+    'mail_team_name'=>env("MAIL_FROM_NAME","Flexible Drive"),
+    'mail_team_contact_number'=>env("MAIL_HELP_LINE_NUMBER","+001")
 ];

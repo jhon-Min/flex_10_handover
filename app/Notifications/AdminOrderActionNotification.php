@@ -3,12 +3,12 @@
 namespace App\Notifications;
 
 use App\Mail\AccountApproveRequestMail;
+use App\Mail\AdminOrderActionMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Support\Facades\Config;
 
-class AccountApprovedSuccess extends Notification
+class AdminOrderActionNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -17,7 +17,7 @@ class AccountApprovedSuccess extends Notification
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(private $mail_attributes)
     {
         //
     }
@@ -41,7 +41,7 @@ class AccountApprovedSuccess extends Notification
      */
     public function toMail($notifiable)
     {
-        return new AccountApproveRequestMail(array($notifiable->email));
+        return new AdminOrderActionMail(array($this->mail_attributes['to_email']),$this->mail_attributes['order'],$this->mail_attributes['action'],$this->mail_attributes['label']);
     }
 
     /**

@@ -2,11 +2,10 @@
 
 namespace App\Notifications;
 
-use Illuminate\Support\Facades\Config;
+use App\Mail\AccountApproveRequestMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 
 class AccountApproveRequest extends Notification implements ShouldQueue
 {
@@ -41,11 +40,7 @@ class AccountApproveRequest extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        $url = Config::get('app.url') . '/users';
-        return (new MailMessage)
-            ->subject('Flexibledrive : Account Approve Request')
-            ->line('New Account created. Click following link to Approve or Decline.')
-            ->action('Approve Account', url($url));
+        return new AccountApproveRequestMail(array($notifiable->email));
     }
 
     /**
