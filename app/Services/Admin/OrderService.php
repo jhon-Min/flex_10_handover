@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Mail\MailType;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
@@ -100,17 +101,17 @@ class OrderService
             $badge = Config::get('constant.order_status_badge')[$request->order_status];
             $label = Config::get('constant.order_status')[$request->order_status];
             $mail_attributes = [
-                'mail_template' => "emails.admin_order_action",
+                // 'mail_template' => "emails.admin_order_action",
                 'mail_to_email' => $order->user->email,
                 'mail_to_name' => $order->user->name,
-                'mail_subject' => "FlexibleDrive : Your Order is " . $label,
+                // 'mail_subject' => "FlexibleDrive : Your Order is " . $label,
                 'mail_body' => [
                     'order' => $order,
                     'action' => $label,
                 ]
             ];
 
-            // Helper::sendEmail($mail_attributes);
+            Helper::sendEmail($mail_attributes,MailType::AdminOrderAction);
             return response()->json(['message' => 'Order is ' . $label], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 401);
@@ -128,10 +129,10 @@ class OrderService
             }
             $order = Order::find($id);
             $mail_attributes = [
-                'mail_template' => "emails.admin_order_action",
+                // 'mail_template' => "emails.admin_order_action",
                 'mail_to_email' => $order->user->email,
                 'mail_to_name' => $order->user->name,
-                'mail_subject' => "FlexibleDrive : Your Order Deleted",
+                // 'mail_subject' => "FlexibleDrive : Your Order Deleted",
                 'mail_body' => [
                     'order' => $order,
                     'action' => 'Deleted',
@@ -143,7 +144,7 @@ class OrderService
             $is_delete = $order->delete();
 
             if ($is_delete) {
-                // Helper::sendEmail($mail_attributes);
+                Helper::sendEmail($mail_attributes,MailType::AdminOrderAction);
                 $response = [
                     'success' => '1',
                     'message' => 'Order has been Deleted',

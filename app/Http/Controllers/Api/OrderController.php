@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Mail\MailType;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\Helper;
 use Illuminate\Support\Facades\Config;
@@ -515,13 +516,13 @@ class OrderController extends BaseController
                     }
                 }
 
-                /*
+                
                 // mail to admin
                 $mail_attributes = [
-                    'mail_template' => "invoice.invoice_pdf",
+                    // 'mail_template' => "invoice.invoice_pdf",
                     'mail_to_email' => (count($admin_emails) > 0) ? $admin_emails : config('app.administrator_email_generic'),
                     'mail_to_name' => config('app.mail_from_name'),
-                    'mail_subject' => "FlexibleDrive : New Order Received!",
+                    // 'mail_subject' => "FlexibleDrive : New Order Received!",
                     'mail_body' => [
                         'order' => $order,
                         'is_for_admin' => 1,
@@ -532,14 +533,14 @@ class OrderController extends BaseController
                         'file_mime' => 'application/pdf',
                     ],
                 ];
-                Helper::sendEmail($mail_attributes);
+                Helper::sendEmail($mail_attributes,MailType::NewOrderRecieved);
 
                 //mail to user
-                $mail_attributes['mail_template'] = "emails.order_confirmation";
+                // $mail_attributes['mail_template'] = "emails.order_confirmation";
                 $mail_attributes['mail_to_email'] =  $order->user->email;
-                $mail_attributes['mail_subject'] =  'FlexibleDrive : Your Order!';
+                // $mail_attributes['mail_subject'] =  'FlexibleDrive : Your Order!';
                 $mail_attributes['mail_body']['is_for_admin'] = 0;
-                Helper::sendEmail($mail_attributes);*/
+                Helper::sendEmail($mail_attributes,MailType::OrderConfirmation);
 
                 Cart::where('user_id', Auth::user()->id)->delete();
                 $order_detail = Order::find($order->id);
@@ -647,10 +648,10 @@ class OrderController extends BaseController
 
             // mail to admin
             $mail_attributes = [
-                'mail_template' => "invoice.invoice_pdf",
+                // 'mail_template' => "invoice.invoice_pdf",
                 'mail_to_email' => (count($admin_emails) > 0) ? $admin_emails : config('app.administrator_email_generic'),
                 'mail_to_name' => config('app.mail_from_name'),
-                'mail_subject' => "FlexibleDrive : New Order Received!",
+                // 'mail_subject' => "FlexibleDrive : New Order Received!",
                 'mail_body' => [
                     'order' => $order,
                     'is_for_admin' => 1,
@@ -661,14 +662,14 @@ class OrderController extends BaseController
                     'file_mime' => 'application/pdf',
                 ],
             ];
-            Helper::sendEmail($mail_attributes);
+            Helper::sendEmail($mail_attributes,MailType::NewOrderRecieved);
 
             //mail to user
             $mail_attributes['mail_template'] = "emails.order_confirmation";
             $mail_attributes['mail_to_email'] =  $order->user->email;
             $mail_attributes['mail_subject'] =  'Flexible Drive : Your Order';
             $mail_attributes['mail_body']['is_for_admin'] = 0;
-            Helper::sendEmail($mail_attributes);
+            Helper::sendEmail($mail_attributes,MailType::OrderConfirmation);
 
             return $this->sendResponse($order, "Reference number updated to order!");
         } catch (\Exception $e) {
@@ -751,17 +752,18 @@ class OrderController extends BaseController
                 $user = User::find($order->user_id);
 
                 $mail_attributes = [
-                    'mail_template' => "emails.order_cancel",
+                    // 'mail_template' => "emails.order_cancel",
                     'mail_to_email' => config('app.administrator_email'),
                     'mail_to_name' => config('app.mail_from_name'),
-                    'mail_subject' => "FlexibleDrive : Order Deleted - " . $order->order_number,
+                    // 'mail_subject' => "FlexibleDrive : Order Deleted - " . $order->order_number,
                     'mail_body' => [
                         'order' => $order,
+                        'order_id'=>$order->order_number,
                         'action' => 'Deleted',
                     ]
                 ];
                 // mail to admin
-                Helper::sendEmail($mail_attributes);
+                Helper::sendEmail($mail_attributes,MailType::OrderCancelation);
 
                 $is_delete = $order->delete();
                 $order->favourite->delete();
@@ -808,17 +810,17 @@ class OrderController extends BaseController
             $orders_delete = Order::whereIn('id', $request->orders)->whereIn('status', ['0', '4'])->delete();
             FavouriteOrders::whereIn('order_id', $request->orders)->delete();
             $mail_attributes = [
-                'mail_template' => "emails.order_cancel",
+                // 'mail_template' => "emails.order_cancel",
                 'mail_to_email' => config('app.administrator_email'),
                 'mail_to_name' => config('app.mail_from_name'),
-                'mail_subject' => "FlexibleDrive : Order Deleted - " . $order_numbers,
+                // 'mail_subject' => "FlexibleDrive : Order Deleted - " . $order_numbers,
                 'mail_body' => [
-                    'orders' => $orders,
+                    'order_id' => $orders,
                     'action' => 'Deleted',
                 ]
             ];
             // mail to admin
-            Helper::sendEmail($mail_attributes);
+            Helper::sendEmail($mail_attributes,MailType::OrderCancelation);
 
             if ($orders_delete > 0) {
                 return $this->sendResponse([], "Order Deleted!");

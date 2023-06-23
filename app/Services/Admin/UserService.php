@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Mail\MailType;
 use \DB;
 use App\Models\User;
 use App\Helpers\Helper;
@@ -80,7 +81,8 @@ class UserService
 
     public function userUpdate($request, $id, $status)
     {
-        $data = ['id' => $id, 'status' => $status, 'account_code' => $request->account_code];
+        $data = ['id' => $id, 'status' => $status, ];
+        // 'account_code' => $request->account_code];
         try {
             $validatedData = UpdateUserValidator::validate($data);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -89,21 +91,21 @@ class UserService
 
         $user = User::find($id);
         $user->admin_approval_status = $status;
-        $user->account_code = $validatedData['account_code'];
+        $user->account_code = isset($validatedData['account_code'])? $validatedData['account_code']: null;
         $updated = $user->update();
 
 
         if ($updated) {
             if ($status == 2) {
-                // $user->notify(new AccountApprovedSuccess()); // error fix
+                $user->notify(new AccountApprovedSuccess()); // error fix
             } else {
                 $mail_attributes = [
-                    'mail_template' => "emails.user_account_notification",
+                    // 'mail_template' => "emails.user_account_notification",
                     'mail_to_email' => $user->email,
                     'mail_to_name' => $user->name,
-                    'mail_subject' => "Flexible Drive : Account Update!",
+                    // 'mail_subject' => "Flexible Drive : Account Update!",
                 ];
-                // Helper::sendEmail($mail_attributes); // error fix
+                Helper::sendEmail($mail_attributes,MailType::UserNotification); // error fix
             }
 
             $badge = Config::get('constant.user_account_status_lables')[$status];

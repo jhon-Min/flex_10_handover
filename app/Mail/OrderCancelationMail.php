@@ -17,7 +17,7 @@ class OrderCancelationMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct($order,private $emails)
+    public function __construct($order,private $emails,private $order_id)
     {
         $this->order=$order;
     }
@@ -28,7 +28,7 @@ class OrderCancelationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config("mail.mail.mail_team_name").': Order Deleted - ' . $this->order->order_number,
+            subject: config("mail.mail.mail_team_name").': Order Deleted - ' . $this->order_id,
             from: new Address(config("mail.from.address"),config("mail.from.name")),
             to:[
                 $this->emails

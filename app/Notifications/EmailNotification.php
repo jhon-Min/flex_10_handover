@@ -64,7 +64,7 @@ class EmailNotification extends Notification
                 return new \App\Mail\OrderConfirmationMail($mail_to_email);
                 // break;
             case MailType::OrderCancelation:
-                return new \App\Mail\OrderCancelationMail($this->mail_attributes['mail_body']['order'],$mail_to_email);
+                return new \App\Mail\OrderCancelationMail($this->mail_attributes['mail_body']['order'],$mail_to_email,$this->mail_attributes['mail_body']['order_id']);
                 // break;
             case MailType::UserNotification:
                 return new \App\Mail\UserNotificationMail($mail_to_email);
