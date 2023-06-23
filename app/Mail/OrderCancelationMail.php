@@ -10,16 +10,16 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdminOrderActionMail extends Mailable
+class OrderCancelationMail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $from;
+    private $order;
     /**
      * Create a new message instance.
      */
-    public function __construct(public $email,private $order, private $action)
+    public function __construct($order,private $emails)
     {
-        
+        $this->order=$order;
     }
 
     /**
@@ -28,9 +28,11 @@ class AdminOrderActionMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config("mail.mail_team_name")." : Your Order is " . $this->action,
+            subject: config("mail.mail.mail_team_name").': Order Deleted - ' . $this->order->order_number,
             from: new Address(config("mail.from.address"),config("mail.from.name")),
-            to:[$this->email]
+            to:[
+                $this->emails
+            ]
         );
     }
 
@@ -40,11 +42,11 @@ class AdminOrderActionMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:"emails.admin_order_action",
+            view: 'emails.order_cancel',
             with:[
                 'order'=>$this->order,
-                'action'=>$this->action
-            ],
+                'action' => 'Deleted',
+            ]
         );
     }
 

@@ -5,21 +5,20 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdminOrderActionMail extends Mailable
+class UserNotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $from;
+
     /**
      * Create a new message instance.
      */
-    public function __construct(public $email,private $order, private $action)
+    public function __construct(private $email)
     {
-        
+        //
     }
 
     /**
@@ -28,8 +27,7 @@ class AdminOrderActionMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config("mail.mail_team_name")." : Your Order is " . $this->action,
-            from: new Address(config("mail.from.address"),config("mail.from.name")),
+            subject: 'User Notification Mail',
             to:[$this->email]
         );
     }
@@ -40,11 +38,7 @@ class AdminOrderActionMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:"emails.admin_order_action",
-            with:[
-                'order'=>$this->order,
-                'action'=>$this->action
-            ],
+            view: 'emails.user_account_notification',
         );
     }
 

@@ -6,20 +6,21 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdminOrderActionMail extends Mailable
+class NewOrderRecievedMail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $from;
+
     /**
      * Create a new message instance.
      */
-    public function __construct(public $email,private $order, private $action)
+    public function __construct(private $email,private $order,private $is_for_admin,private array $attachment)
     {
-        
+        //
     }
 
     /**
@@ -28,9 +29,9 @@ class AdminOrderActionMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config("mail.mail_team_name")." : Your Order is " . $this->action,
-            from: new Address(config("mail.from.address"),config("mail.from.name")),
-            to:[$this->email]
+            subject: 'New Order Recieved Mail',
+            to: is_array($this->email)? $this->email:[$this->email],
+            from : new Address(config("mail.from.address"),config("mail.from.name"))
         );
     }
 
@@ -40,11 +41,11 @@ class AdminOrderActionMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:"emails.admin_order_action",
+            view: 'invoice.invoice_pdf',
             with:[
-                'order'=>$this->order,
-                'action'=>$this->action
-            ],
+                'order' => $this->order,
+                'is_for_admin' => 1,
+            ]
         );
     }
 
@@ -55,6 +56,8 @@ class AdminOrderActionMail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        return [
+            Attachment::fromPath($this->attachment["file_full_path"])->as($this->attachment['file_name'])->withMime($this->attachment['file_mime']),
+        ];
     }
 }

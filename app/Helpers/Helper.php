@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Mail\MailType;
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\EmailNotification;
 use Illuminate\Support\Facades\DB;
@@ -10,12 +11,12 @@ use Illuminate\Support\Facades\Notification;
 class Helper
 {
 
-    public static function sendEmail($attributes)
+    public static function sendEmail($attributes,int $type)
     {
         //return View::make('emails.order_cancel', ['order' => $order, 'user' => $user]);
         Notification::route('mail', $attributes['mail_to_email'])
             ->route('nexmo', '5555555555')
-            ->notify(new EmailNotification($attributes));
+            ->notify(new EmailNotification($attributes,$type));
         return true;
     }
 

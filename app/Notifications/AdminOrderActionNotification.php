@@ -17,7 +17,7 @@ class AdminOrderActionNotification extends Notification implements ShouldQueue
      *
      * @return void
      */
-    public function __construct(private $mail_attributes)
+    public function __construct()
     {
         //
     }
@@ -41,7 +41,7 @@ class AdminOrderActionNotification extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        return new AdminOrderActionMail(array($this->mail_attributes['to_email']),$this->mail_attributes['order'],$this->mail_attributes['action'],$this->mail_attributes['label']);
+        return new AdminOrderActionMail(array($notifiable['to_email']),$notifiable['mail_data']['order'],$notifiable['mail_data']['action']);
     }
 
     /**
