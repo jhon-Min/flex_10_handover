@@ -11,7 +11,7 @@ class UpdateUserValidator
         $validator = Validator::make($data, [
             'id' => 'required|exists:users,id',
             'status' => 'required|in:1,2,3',
-            'account_code' => 'required|string'
+            'account_code' => 'nullable|string'
         ]);
 
         return $validator->validate();
