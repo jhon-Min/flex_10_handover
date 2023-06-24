@@ -30,7 +30,7 @@ class AccountApproveRequestMail extends Mailable
         return new Envelope(
             subject: config("mail.mail_team_name") .' : Account Update!',
             from: new Address(config("mail.from.address"),config("mail.from.name")),
-            to:$this->email
+            to:[$this->email]
         );
     }
 

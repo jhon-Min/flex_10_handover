@@ -29,7 +29,7 @@ class NewOrderRecievedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Order Recieved Mail',
+            subject: config("mail.mail_team_name")." : New Order Received!",
             to: is_array($this->email)? $this->email:[$this->email],
             from : new Address(config("mail.from.address"),config("mail.from.name"))
         );

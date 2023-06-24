@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Helpers\Helper;
+use App\Mail\MailType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BaseController;
 use Illuminate\Support\Facades\Validator;
@@ -38,15 +39,15 @@ class ContactController extends BaseController
             }
 
             $mail_attributes = [
-                'mail_template' => "emails.contact",
+                // 'mail_template' => "emails.contact",
                 'mail_to_email' => config('app.administrator_email'),
                 'mail_to_name' => config('app.mail_from_name'),
-                'mail_subject' => "FlexibleDrive : New Enquiry Received!",
+                // 'mail_subject' => "FlexibleDrive : New Enquiry Received!",
                 'mail_body' => [
                     'contact' => $request,
                 ]
             ];
-            Helper::sendEmail($mail_attributes);
+            Helper::sendEmail($mail_attributes,MailType::Contact);
             return $this->sendResponse([], "Mail send!");
         } catch (\Exception $e) {
 

@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Mail\AdminOrderActionMail;
+use App\Mail\ContactMail;
 use App\Mail\MailType;
 use App\Mail\NewOrderRecievedMail;
 use App\Mail\OrderCancelationMail;
@@ -68,6 +69,12 @@ class EmailNotification extends Notification
                 // break;
             case MailType::UserNotification:
                 return new \App\Mail\UserNotificationMail($mail_to_email);
+            case MailType::AccountApproveRequest:
+                return new \App\Mail\AccountApproveRequestMail($mail_to_email);
+            case MailType::UserAccountCreated:
+                return new \App\Mail\UserAccountCreatedMail($mail_to_email);
+            case MailType::Contact:
+                return new ContactMail($mail_to_email,$this->mail_attributes['mail_body']['contact']);
                 // break;
         }
         // $mail_attributes = $this->mail_attributes;

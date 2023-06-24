@@ -1047,17 +1047,17 @@ class OrderController extends BaseController
                 $is_cancel = $order->save();
 
                 $mail_attributes = [
-                    'mail_template' => "emails.order_cancel",
+                    // 'mail_template' => "emails.order_cancel",
                     'mail_to_email' => config('app.administrator_email'),
                     'mail_to_name' => config('app.mail_from_name'),
-                    'mail_subject' => "FlexibleDrive : Order Cancelled - " . $order->order_number,
+                    // 'mail_subject' => "FlexibleDrive : Order Cancelled - " . $order->order_number,
                     'mail_body' => [
                         'order' => $order,
                         'action' => 'Cancelled',
                     ]
                 ];
                 // mail to admin
-                Helper::sendEmail($mail_attributes);
+                Helper::sendEmail($mail_attributes,MailType::OrderCancelation);
             }
             if ($is_cancel > 0) {
                 return $this->sendResponse($order, "Order Cancelled!");
