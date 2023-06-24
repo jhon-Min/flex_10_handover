@@ -53,30 +53,34 @@ class EmailNotification extends Notification
         $mail_attribute=$this->mail_attributes;
         $mail_to_email = $this->mail_attributes['mail_to_email'];
         $mail_to_name = $this->mail_attributes['mail_to_name'];
-
+        $mailable=null;
         switch($this->type){
             case MailType::NewOrderRecieved:
-                return new \App\Mail\NewOrderRecievedMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['is_for_admin'],$this->mail_attributes['attachment']);
-                // break;
+                $mailable= new \App\Mail\NewOrderRecievedMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['is_for_admin'],$this->mail_attributes['attachment']);
+                break;
             case MailType::AdminOrderAction:
-                return new \App\Mail\AdminOrderActionMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['action']);
-                // break;
+                $mailable= new \App\Mail\AdminOrderActionMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['action']);
+                break;
             case MailType::OrderConfirmation:
-                return new \App\Mail\OrderConfirmationMail($mail_to_email);
-                // break;
+                $mailable= new \App\Mail\OrderConfirmationMail($mail_to_email);
+                break;
             case MailType::OrderCancelation:
-                return new \App\Mail\OrderCancelationMail($this->mail_attributes['mail_body']['order'],$mail_to_email,$this->mail_attributes['mail_body']['order_id']);
-                // break;
+                $mailable= new \App\Mail\OrderCancelationMail($this->mail_attributes['mail_body']['order'],$mail_to_email,$this->mail_attributes['mail_body']['order_id']);
+                break;
             case MailType::UserNotification:
-                return new \App\Mail\UserNotificationMail($mail_to_email);
+                $mailable= new \App\Mail\UserNotificationMail($mail_to_email);
+                break;
             case MailType::AccountApproveRequest:
-                return new \App\Mail\AccountApproveRequestMail($mail_to_email);
+                $mailable= new \App\Mail\AccountApproveRequestMail($mail_to_email);
+                break;
             case MailType::UserAccountCreated:
-                return new \App\Mail\UserAccountCreatedMail($mail_to_email);
+                $mailable= new \App\Mail\UserAccountCreatedMail($mail_to_email);
+                break;
             case MailType::Contact:
-                return new ContactMail($mail_to_email,$this->mail_attributes['mail_body']['contact']);
-                // break;
+                $mailable= new ContactMail($mail_to_email,$this->mail_attributes['mail_body']['contact']);
+                break;
         }
+        return $mailable;
         // $mail_attributes = $this->mail_attributes;
         // $mail_from_email = config('app.mail_from_email');
         // $mail_from_name = config('app.mail_from_name');

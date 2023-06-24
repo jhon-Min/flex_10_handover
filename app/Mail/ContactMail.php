@@ -17,7 +17,7 @@ class ContactMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(private $contact,private $email)
+    public function __construct(private $email,private $contact)
     {
         //
     }
