@@ -2,8 +2,7 @@
 
 namespace App\Services\Admin;
 
-use App\Mail\MailType;
-use \DB;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Helpers\Helper;
 use Yajra\Datatables\Datatables;
@@ -81,7 +80,7 @@ class UserService
 
     public function userUpdate($request, $id, $status)
     {
-        $data = ['id' => $id, 'status' => $status, ];
+        $data = ['id' => $id, 'status' => $status,];
         // 'account_code' => $request->account_code];
         try {
             $validatedData = UpdateUserValidator::validate($data);
@@ -91,7 +90,7 @@ class UserService
 
         $user = User::find($id);
         $user->admin_approval_status = $status;
-        $user->account_code = isset($validatedData['account_code'])? $validatedData['account_code']: null;
+        $user->account_code = isset($validatedData['account_code']) ? $validatedData['account_code'] : null;
         $updated = $user->update();
 
 
@@ -105,7 +104,7 @@ class UserService
                     'mail_to_name' => $user->name,
                     // 'mail_subject' => "Flexible Drive : Account Update!",
                 ];
-                Helper::sendEmail($mail_attributes,MailType::UserNotification); // error fix
+                Helper::sendEmail($mail_attributes, MailType::UserNotification); // error fix
             }
 
             $badge = Config::get('constant.user_account_status_lables')[$status];
