@@ -1066,7 +1066,6 @@ class OrderController extends BaseController
                 return $this->sendError("You are not Authorised to cancel this order.");
             }
         } catch (\Exception $e) {
-            dd($e->getTraceAsString());
             return $this->sendError($e->getMessage(), [], 401);
         }
     }
