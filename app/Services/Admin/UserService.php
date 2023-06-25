@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Mail\MailType;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Helpers\Helper;
