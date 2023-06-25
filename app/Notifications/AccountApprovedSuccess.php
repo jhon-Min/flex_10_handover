@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Mail\AccountApprovedRequestMail;
 use App\Mail\AccountApproveRequestMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
