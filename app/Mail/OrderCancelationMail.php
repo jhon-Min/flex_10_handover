@@ -45,7 +45,7 @@ class OrderCancelationMail extends Mailable
             markdown: 'emails.order_cancel',
             with:[
                 'order'=>$this->order,
-                'action' => 'Deleted',
+                'action' => $this->action,
             ]
         );
     }
