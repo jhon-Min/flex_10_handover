@@ -1034,7 +1034,7 @@ class OrderController extends BaseController
             if ($validator->fails()) {
                 return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
-            $order = Order::where('id', $order_id)->where('user_id', 10)->with(['items', 'items.product'])->first();
+            $order = Order::where('id', $order_id)->where('user_id', Auth::user()->id)->with(['items', 'items.product'])->first();
 
             if (isset($order->id)) {
                 $user = User::find($order->user_id);
