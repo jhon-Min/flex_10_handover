@@ -57,7 +57,7 @@ class NewOrderRecievedMail extends Mailable
     public function attachments(): array
     {
         return [
-            Attachment::fromPath($this->attachment["file_full_path"])->as($this->attachment['file_name'])->withMime($this->attachment['file_mime']),
+            Attachment::fromPath(storage_path(str_replace(config("app.url")."/storage","app/public",$this->attachment["file_full_path"])))->as($this->attachment['file_name'])->withMime($this->attachment['file_mime']),
         ];
     }
 }

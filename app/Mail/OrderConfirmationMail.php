@@ -29,7 +29,7 @@ class OrderConfirmationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config("mail.mail.mail_team_name").' : Your Order!',
+            subject: config("mail.mail_team_name").' : Your Order!',
             to: [$this->mail],
             from: new Address(config("mail.from.address"),config("mail.from.name"))
         );
@@ -57,7 +57,7 @@ class OrderConfirmationMail extends Mailable
     public function attachments(): array
     {
         return [
-            Attachment::fromStorage($this->attachment["file_full_path"])->as($this->attachment['file_name'])->withMime($this->attachment['file_mime']),
+            Attachment::fromPath(storage_path(str_replace(config("app.url")."/storage","app/public",$this->attachment["file_full_path"])))->as($this->attachment['file_name'])->withMime($this->attachment['file_mime']),
         ];
     }
 }
