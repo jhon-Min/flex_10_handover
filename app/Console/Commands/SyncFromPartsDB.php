@@ -110,7 +110,7 @@ class SyncFromPartsDB extends Command
         echo "End : Delete Products \n\n";
 
         echo "Start : Import CED Product Criteria \n";
-        // $this->importCEDProductCriteria();
+        $this->importCEDProductCriteria();
         echo "End : Import CED Product Criteria \n\n";
 
         echo "Start : Import CED Product Company Web Status \n";
@@ -122,7 +122,7 @@ class SyncFromPartsDB extends Command
 
         //Import Vehicles from the partsdb to local database
         echo "Start : Import Vehicles \n";
-        $this->importVehicles();
+        // $this->importVehicles();
         echo "End : Import Vehicles \n";
         $import_script->vehicle = 1;
         $import_script->save();
@@ -145,7 +145,7 @@ class SyncFromPartsDB extends Command
 
         //Import Product-image mapping
         echo "Start : Import Product-image mapping \n" . Carbon::now() . "\n";
-        // $this->importProductImageMapping();
+        $this->importProductImageMapping();
         echo "End : Import Product-image mapping \n" . Carbon::now() . "\n";
         $import_script->product_images = 1;
         $import_script->save();
