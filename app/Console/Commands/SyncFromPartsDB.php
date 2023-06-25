@@ -76,15 +76,15 @@ class SyncFromPartsDB extends Command
         $import_script->save();
 
         // Get all brands that available to the customer from parts db and import in local database
-        // echo "Start : Import Brands \n";
-        // $this->importBrands();
-        // echo "End : Import Brands \n\n";
-        // $import_script->brand = 1;
-        // $import_script->save();
+        echo "Start : Import Brands \n";
+        $this->importBrands();
+        echo "End : Import Brands \n\n";
+        $import_script->brand = 1;
+        $import_script->save();
 
         //Get CED categories
         echo "Start : Import categories \n";
-        // $this->importCategories();
+        $this->importCategories();
         echo "End : Import categories \n\n";
         $import_script->categories = 1;
         $import_script->save();
@@ -156,21 +156,24 @@ class SyncFromPartsDB extends Command
         echo $import_script->end->diffForHumans($import_script->start);
     }
 
-    // private function importBrands()
-    // {
+    // Done min
+    private function importBrands()
+    {
+        $brands = $this->partsdbapirepository->getAllBrands();
+        foreach ($brands as $brand) {
+            if ($brand->BrandName != "TRW" && $brand->BrandName != "DOGA" && $brand->BrandName !=  "REMSA" && $brand->BrandName !=  "BOSCH") {
+                Brand::firstOrCreate(
+                    [
+                        'id' => $brand->ID,
+                        'name' => $brand->BrandName,
+                        'logo' => $brand->ImagesLocation . $brand->LogoFileName
+                    ]
+                );
+            }
+        }
+    }
 
-    //     $db_brands = Brand::all()->pluck('id')->toArray();
-    //     $brands = $this->partsdbapirepository->getAllBrands();
-    //     $brands_array = [];
-    //     foreach ($brands as $brand) {
-    //         if ($brand->BrandName != "TRW" && $brand->BrandName != "DOGA" && $brand->BrandName !=  "REMSA" && $brand->BrandName !=  "BOSCH") {
-    //             $brand_data = Brand::firstOrCreate(['id' => $brand->ID, 'name' => $brand->BrandName]);
-    //             $brand_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
-    //             $brand_data->save();
-    //         }
-    //     }
-    // }
-
+    // Done min
     private function importCategories()
     {
 
@@ -368,6 +371,7 @@ class SyncFromPartsDB extends Command
         }
     }
 
+    // Done min
     private function getProductAttributes($brand_id, $product_nr, $standard_description_id)
     {
 
@@ -660,6 +664,7 @@ class SyncFromPartsDB extends Command
         }
     }
 
+    // Done by min
     private function importProductImageMapping()
     {
 
@@ -672,14 +677,15 @@ class SyncFromPartsDB extends Command
 
         foreach ($products as $product_id => $product) {
             list($product_nr, $brand_id) = explode("_", $product);
-
             $product_images =  $this->partsdbapirepository->getProductsImages($brand_id, $product_nr);
+
             foreach ($product_images as  $product_image) {
                 try {
                     if (isset($product_image->ImagesLocation) && !empty($product_image->ImagesLocation)) {
 
                         $path = $this->PRODUCTS_PATH . $product_image->FileName;
                         $exist_image = Storage::disk('public')->exists($path);
+                        echo "Start Uploading to Disk";
                         $ext = $product_image->Extension;
 
                         if ($ext != "PDF") {
@@ -704,7 +710,7 @@ class SyncFromPartsDB extends Command
                 }
             }
 
-            if (count($product_image_array) >= 1000) {
+            if (count($product_image_array) >= 10) {
                 echo "\n Images Imported : " . count($product_image_array) . "\n";
                 ProductImage::insert($product_image_array);
                 $product_image_array = [];
