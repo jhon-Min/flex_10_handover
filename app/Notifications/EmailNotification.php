@@ -56,13 +56,13 @@ class EmailNotification extends Notification
         $mailable=null;
         switch($this->type){
             case MailType::NewOrderRecieved:
-                $mailable= new \App\Mail\NewOrderRecievedMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['is_for_admin'],$this->mail_attributes['attachement']);
+                $mailable= new \App\Mail\NewOrderRecievedMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['is_for_admin'],$this->mail_attributes['mail_attachement']);
                 break;
             case MailType::AdminOrderAction:
                 $mailable= new \App\Mail\AdminOrderActionMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['action']);
                 break;
             case MailType::OrderConfirmation:
-                $mailable= new \App\Mail\OrderConfirmationMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['is_for_admin'],$this->mail_attributes['attachement']);
+                $mailable= new \App\Mail\OrderConfirmationMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['is_for_admin'],$this->mail_attributes['mail_attachement']);
                 break;
             case MailType::OrderCancelation:
                 $mailable= new \App\Mail\OrderCancelationMail($this->mail_attributes['mail_body']['order'],$mail_to_email,$this->mail_attributes['mail_body']['order_id'],$this->mail_attributes['mail_body']['action']);
