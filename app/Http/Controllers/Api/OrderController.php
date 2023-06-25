@@ -1034,7 +1034,7 @@ class OrderController extends BaseController
             if ($validator->fails()) {
                 return $this->sendError("validation errors", $validator->errors()->all(), 400);
             }
-            $order = Order::where('id', $order_id)->where('user_id', Auth::user()->id)->with(['items', 'items.product'])->first();
+            $order = Order::where('id', $order_id)->where('user_id', 10)->with(['items', 'items.product'])->first();
 
             if (isset($order->id)) {
                 $user = User::find($order->user_id);
@@ -1054,6 +1054,7 @@ class OrderController extends BaseController
                     'mail_body' => [
                         'order' => $order,
                         'action' => 'Cancelled',
+                        'order_id'=>$order->order_number
                     ]
                 ];
                 // mail to admin
@@ -1065,7 +1066,7 @@ class OrderController extends BaseController
                 return $this->sendError("You are not Authorised to cancel this order.");
             }
         } catch (\Exception $e) {
-
+            dd($e->getTraceAsString());
             return $this->sendError($e->getMessage(), [], 401);
         }
     }
