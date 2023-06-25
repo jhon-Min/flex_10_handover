@@ -41,7 +41,7 @@ class NewOrderRecievedMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'invoice.invoice_pdf',
+            markdown: 'invoice.invoice_pdf',
             with:[
                 'order' => $this->order,
                 'is_for_admin' => 1,

@@ -42,7 +42,7 @@ class OrderCancelationMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.order_cancel',
+            markdown: 'emails.order_cancel',
             with:[
                 'order'=>$this->order,
                 'action' => 'Deleted',

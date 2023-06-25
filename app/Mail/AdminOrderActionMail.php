@@ -40,7 +40,7 @@ class AdminOrderActionMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:"emails.admin_order_action",
+            markdown:"emails.admin_order_action",
             with:[
                 'order'=>$this->order,
                 'action'=>$this->action

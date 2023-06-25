@@ -40,7 +40,7 @@ class AccountApproveRequestMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view:"emails.user_account_success_notification"
+            markdown:"emails.user_account_success_notification"
         );
     }
 
