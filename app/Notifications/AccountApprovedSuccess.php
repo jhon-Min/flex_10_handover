@@ -41,7 +41,7 @@ class AccountApprovedSuccess extends Notification
      */
     public function toMail($notifiable)
     {
-        return new AccountApproveRequestMail(array($notifiable->email));
+        return new AccountApprovedRequestMail($notifiable->email);
     }
 
     /**
