@@ -815,7 +815,8 @@ class OrderController extends BaseController
                 'mail_to_name' => config('app.mail_from_name'),
                 // 'mail_subject' => "FlexibleDrive : Order Deleted - " . $order_numbers,
                 'mail_body' => [
-                    'order_id' => $orders,
+                    'order_id' => $order_numbers,
+                    'order'=>$orders,
                     'action' => 'Deleted',
                 ]
             ];
