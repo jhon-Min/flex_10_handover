@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -17,7 +18,7 @@ class OrderConfirmationMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(private $mail)
+    public function __construct(private $mail,private $order,private $is_for_admin,private array $attachment)
     {
         //
     }
@@ -41,6 +42,10 @@ class OrderConfirmationMail extends Mailable
     {
         return new Content(
             markdown: 'emails.order_confirmation',
+            with:[
+                'order' => $this->order,
+                'is_for_admin' => 1,
+            ]
         );
     }
 
@@ -51,6 +56,8 @@ class OrderConfirmationMail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        return [
+            Attachment::fromStorage($this->attachment["file_full_path"])->as($this->attachment['file_name'])->withMime($this->attachment['file_mime']),
+        ];
     }
 }
