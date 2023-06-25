@@ -110,7 +110,7 @@ class SyncFromPartsDB extends Command
         echo "End : Delete Products \n\n";
 
         echo "Start : Import CED Product Criteria \n";
-        $this->importCEDProductCriteria();
+        // $this->importCEDProductCriteria();
         echo "End : Import CED Product Criteria \n\n";
 
         echo "Start : Import CED Product Company Web Status \n";
