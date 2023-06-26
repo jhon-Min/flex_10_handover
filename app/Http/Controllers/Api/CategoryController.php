@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Category;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BaseController;
 use App\Repositories\ProductsRepository;
+use App\Repositories\PartsDBAPIRepository;
 
 class CategoryController extends BaseController
 {
-    public $productsRepository;
+    public $productsRepository, $partsdbapirepository;
 
-    public function __construct(ProductsRepository $productsRepository)
+    public function __construct(ProductsRepository $productsRepository, PartsDBAPIRepository $partsdbapirepository)
     {
         $this->productsRepository = $productsRepository;
+        $this->partsdbapirepository = $partsdbapirepository;
     }
 
     public function positions(Request $request)
@@ -45,7 +47,7 @@ class CategoryController extends BaseController
         }
     }
 
-    /** 
+    /**
      * @group Categories
      * Get all Categories
      * This API will be use for get all Categories and products count.
@@ -61,13 +63,29 @@ class CategoryController extends BaseController
      * @queryParam rego_number (String) vehicle Rego Number Example:99
      * @queryParam state (String) ACT, NSW, NT, QLD, SA, TAS, VIC, WA Example:SA
      * @queryParam vin_number (String) VIN Number Example:JF1BL5KS57G03135
-     * 
+     *
      */
     public function index(Request $request)
     {
         try {
-
             $message = "All Categories";
+            $this->partsdbapirepository->login();
+            $category_api = $this->partsdbapirepository->getAllCategories();
+
+            foreach ($category_api as $category) {
+
+                $category_data = Category::firstOrCreate([
+                    'id' => $category->CategoryID,
+                    'name' => $category->CategoryName
+                ]);
+
+                $category_data->parent_id = $category->CategoryParentID ?? 0;
+                $category_data->description = $category->CategoryDescription;
+                $category_data->icon = $category->CategoryIcon;
+                $category_data->image = $category->CategoryImage;
+                $category_data->save();
+            }
+
             $categories = Category::all();
 
             if (!empty($request->all())) {
