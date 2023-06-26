@@ -28,7 +28,7 @@ class AccountApprovedRequestMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config("mail.mail_team_name") .' : Account Update!',
+            subject: config("mail.mail_team_name") .' : Account Update',
             from: new Address(config("mail.from.address"),config("mail.from.name")),
             to:[$this->email]
         );
