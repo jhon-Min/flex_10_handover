@@ -47,7 +47,7 @@ class PasswordResetRequest extends Notification implements ShouldQueue
         // $url = url('/api/password/find/' . $this->token);
         $url = Config::get('constant.front_url') . '/reset/password/' . $this->token;
         return (new MailMessage)
-            ->subject('Flexibledrive : Password Reset Request')
+            ->subject(config("mail.mail_team_name").' : Password Reset Request')
             ->greeting('Reset Password')
             ->line("You are receiving this email because we received a password reset request for your account. Click the button below and you'll be directed to update your password.")
             ->action('Reset Password', url($url))
