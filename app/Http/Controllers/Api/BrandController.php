@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\BaseController;
-use Illuminate\Http\Request;
 use App\Models\Brand;
+use Illuminate\Http\Request;
+use App\Http\Controllers\BaseController;
 use App\Repositories\ProductsRepository;
+use App\Repositories\PartsDBAPIRepository;
 
 class BrandController extends BaseController
 {
-    public $productsRepository;
+    public $productsRepository, $partsdbapirepository;
 
-    public function __construct(ProductsRepository $productsRepository)
+    public function __construct(ProductsRepository $productsRepository, PartsDBAPIRepository $partsdbapirepository)
     {
         $this->productsRepository = $productsRepository;
+        $this->partsdbapirepository = $partsdbapirepository;
     }
 
-    /** 
+    /**
      * @group Brands
      * Get all brands
      * This API will be use for get all brands and products count.
@@ -32,11 +34,27 @@ class BrandController extends BaseController
      * @queryParam rego_number (String) vehicle Rego Number Example:99
      * @queryParam state (String) ACT, NSW, NT, QLD, SA, TAS, VIC, WA Example:SA
      * @queryParam vin_number (String) VIN Number Example:JF1BL5KS57G03135
-     * 
+     *
      */
     public function index(Request $request)
     {
+
         try {
+            $this->partsdbapirepository->login();
+            $brand_api =  $this->partsdbapirepository->getAllBrands();
+
+            foreach ($brand_api as $brand) {
+                if ($brand->BrandName != "TRW" && $brand->BrandName != "DOGA" && $brand->BrandName !=  "REMSA" && $brand->BrandName !=  "BOSCH") {
+                    $brands_data = Brand::firstOrCreate(
+                        [
+                            'id' => $brand->ID,
+                            'name' => $brand->BrandName,
+                        ],
+                    );
+                    $brands_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
+                    $brands_data->save();
+                }
+            }
 
             $brands = Brand::all();
             $message = "All brands";
