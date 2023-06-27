@@ -87,7 +87,7 @@ class ProductsRepository extends BaseRepository
             $products->where('brand_id', $filters['brand_id']);
         }
 
-        // Filter with category id            
+        // Filter with category id
         if (isset($filters['category_id'])) {
             $products->whereHas('categories', function ($query) use ($filters) {
                 $query->where('category_id', $filters['category_id']);
@@ -258,7 +258,7 @@ class ProductsRepository extends BaseRepository
 
         if (!empty($part_type) && !empty($paginate)) {
             SearchHistory::create([
-                'user_id'      => $userInfo->getUserId(),
+                'user_id'      => $userInfo->id,
                 'search_type'  => $part_type ?? NULL,
                 'part_number'  => $filters['product_nr'] ?? NULL,
                 'state'        => $state ?? '',

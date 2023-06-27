@@ -100,7 +100,7 @@ class SyncFromPartsDB extends Command
         //Import Products from the partsdb to local database with make, model, vehicle mapping (Complete)
         echo "Start : Import Products \n";
         Log::info("Start : Import Products");
-        // $this->importProducts();
+        $this->importProducts();
         Log::info("End : Import Products");
         echo "End : Import Products \n\n";
 
@@ -737,19 +737,23 @@ class SyncFromPartsDB extends Command
             $product_id_sku = Product::where('brand_id', $brand_id)->where('company_sku', '<>', '')->pluck('id', 'company_sku')->toArray();
             foreach ($products as $company_sku => $product_nr) {
 
-                $criterias = $this->partsdbapirepository->getCEDProductCriteria($brand_id, $product_nr, $company_sku);
-                if (count($criterias) > 0) {
+                try {
+                    $criterias = $this->partsdbapirepository->getCEDProductCriteria($brand_id, $product_nr, $company_sku);
+                    if (count($criterias) > 0) {
 
-                    CEDProductCriteria::where('product_id', $product_id_sku[$company_sku])->delete();
-                    foreach ($criterias as $criteria) {
-                        CEDProductCriteria::firstOrCreate([
-                            'product_id' => $product_id_sku[$company_sku],
-                            'criteria_name' => $criteria->CriteriaName,
-                            'criteria_value' => $criteria->CriteriaValue
-                        ]);
+                        CEDProductCriteria::where('product_id', $product_id_sku[$company_sku])->delete();
+                        foreach ($criterias as $criteria) {
+                            CEDProductCriteria::firstOrCreate([
+                                'product_id' => $product_id_sku[$company_sku],
+                                'criteria_name' => $criteria->CriteriaName,
+                                'criteria_value' => $criteria->CriteriaValue
+                            ]);
+                        }
                     }
+                } catch (\Throwable $th) {
+                    echo 'Ced Product Criteria not found in the partsdb api';
                 }
-                echo 'Get Product Cretia from API';
+                echo 'Get Product Cretia from API \n';
             }
         }
     }
