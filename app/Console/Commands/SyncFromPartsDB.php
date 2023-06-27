@@ -100,7 +100,7 @@ class SyncFromPartsDB extends Command
         //Import Products from the partsdb to local database with make, model, vehicle mapping (Complete)
         echo "Start : Import Products \n";
         Log::info("Start : Import Products");
-        $this->importProducts();
+        // $this->importProducts();
         Log::info("End : Import Products");
         echo "End : Import Products \n\n";
 
@@ -148,7 +148,7 @@ class SyncFromPartsDB extends Command
 
         //Import Product-image mapping
         echo "Start : Import Product-image mapping \n" . Carbon::now() . "\n";
-        $this->importProductImageMapping();
+        // $this->importProductImageMapping();
         echo "End : Import Product-image mapping \n" . Carbon::now() . "\n";
         $import_script->product_images = 1;
         $import_script->save();
