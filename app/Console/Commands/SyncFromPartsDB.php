@@ -113,6 +113,8 @@ class SyncFromPartsDB extends Command
         echo "Start : Import CED Product Criteria \n";
         $this->importCEDProductCriteria();
         echo "End : Import CED Product Criteria \n\n";
+        $import_script->product_criteria = 1;
+        $import_script->save();
 
         echo "Start : Import CED Product Company Web Status \n";
         // $this->importPorductCompanyWebStatus();
@@ -747,9 +749,8 @@ class SyncFromPartsDB extends Command
                         ]);
                     }
                 }
+                echo 'Get Product Cretia from API';
             }
-
-            echo 'Get Product Cretia from API';
         }
     }
 
