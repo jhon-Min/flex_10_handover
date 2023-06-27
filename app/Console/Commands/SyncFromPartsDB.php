@@ -75,16 +75,16 @@ class SyncFromPartsDB extends Command
         $import_script->login = 1;
         $import_script->save();
 
-        // Get all brands that available to the customer from parts db and import in local database
+        // Get all brands that available to the customer from parts db and import in local database (Complete)
         echo "Start : Import Brands \n";
-        $this->importBrands();
+        // $this->importBrands();
         echo "End : Import Brands \n\n";
         $import_script->brand = 1;
         $import_script->save();
 
-        //Get CED categories
+        //Get CED categories (Complete)
         echo "Start : Import categories \n";
-        $this->importCategories();
+        // $this->importCategories();
         echo "End : Import categories \n\n";
         $import_script->categories = 1;
         $import_script->save();
@@ -97,7 +97,7 @@ class SyncFromPartsDB extends Command
         $import_script->make_model = 1;
         $import_script->save();
 
-        //Import Products from the partsdb to local database with make, model, vehicle mapping
+        //Import Products from the partsdb to local database with make, model, vehicle mapping (Complete)
         echo "Start : Import Products \n";
         Log::info("Start : Import Products");
         // $this->importProducts();
@@ -109,8 +109,9 @@ class SyncFromPartsDB extends Command
         // $this->deleteProducts();
         echo "End : Delete Products \n\n";
 
+        // Get CED Prodct Criteria (Complete)
         echo "Start : Import CED Product Criteria \n";
-        // $this->importCEDProductCriteria();
+        $this->importCEDProductCriteria();
         echo "End : Import CED Product Criteria \n\n";
 
         echo "Start : Import CED Product Company Web Status \n";
@@ -747,6 +748,8 @@ class SyncFromPartsDB extends Command
                     }
                 }
             }
+
+            echo 'Get Product Cretia from API';
         }
     }
 
