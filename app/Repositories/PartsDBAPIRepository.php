@@ -32,6 +32,12 @@ class PartsDBAPIRepository extends BaseRepository
         return $categories->ListResult ?? [];
     }
 
+    public function getAllMakes()
+    {
+        $makes = $this->callPartsDBAPI(config('partsdb.makes.all'));
+        return $makes;
+    }
+
     public function getAllMakesAndModels()
     {
         $makes_and_models = $this->callPartsDBAPI(config('partsdb.makes-models'));
