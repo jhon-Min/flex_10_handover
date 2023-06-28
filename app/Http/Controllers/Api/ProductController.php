@@ -53,10 +53,10 @@ class ProductController extends BaseController
      * @queryParam vin_number (String) VIN Number Example:JF1BL5KS57G03135
      * @queryParam sort_column (String) sort product list liek Price , name etc. Example:price_nett
      * @queryParam sort_order (String) sort by assanding or Desancding. Example:ASC
-     * 
-     * 
-     * 
-     * 
+     *
+     *
+     *
+     *
      */
     public function index(Request $request)
     {
@@ -78,7 +78,7 @@ class ProductController extends BaseController
                 return $this->sendError('Invalid input', $validator->errors()->all(), 401);
             }
 
-            $products = $this->productsrepository->getProducts($request->all(), $paginate, $request->page, $request->per_page);
+            $products = $this->productsrepository->getProdCucts($request->all(), $paginate, $request->page, $request->per_page);
 
             return $this->sendResponse($products, "Products");
         } catch (\Exception $e) {
@@ -91,10 +91,10 @@ class ProductController extends BaseController
      * @group Products
      * Product Detail
      * For get particular product detail. here need to pass product id ie (api/product/10/detail).
-     * 
-     * @param id required product id 
-     * 
-     * 
+     *
+     * @param id required product id
+     *
+     *
      */
     public function show($id)
     {

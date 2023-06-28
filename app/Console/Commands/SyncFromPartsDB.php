@@ -77,14 +77,14 @@ class SyncFromPartsDB extends Command
 
         // Get all brands that available to the customer from parts db and import in local database (Complete)
         echo "Start : Import Brands \n";
-        // $this->importBrands();
+        $this->importBrands();
         echo "End : Import Brands \n\n";
         $import_script->brand = 1;
         $import_script->save();
 
         //Get CED categories (Complete)
         echo "Start : Import categories \n";
-        // $this->importCategories();
+        $this->importCategories();
         echo "End : Import categories \n\n";
         $import_script->categories = 1;
         $import_script->save();
@@ -92,7 +92,7 @@ class SyncFromPartsDB extends Command
 
         //Get the list of all Makes and Models from PARts system and import in local database
         echo "Start : Import Makes and Models \n";
-        // $this->importMakeAndModel();
+        $this->importMakeAndModel();
         echo "End : Import Makes and Models \n\n";
         $import_script->make_model = 1;
         $import_script->save();
@@ -100,13 +100,13 @@ class SyncFromPartsDB extends Command
         //Import Products from the partsdb to local database with make, model, vehicle mapping (Complete)
         echo "Start : Import Products \n";
         Log::info("Start : Import Products");
-        // $this->importProducts();
+        $this->importProducts();
         Log::info("End : Import Products");
         echo "End : Import Products \n\n";
 
         //delete Products from local db which are removed from parts db and not coming in sync
         echo "Start : Delete Products \n";
-        // $this->deleteProducts();
+        $this->deleteProducts();
         echo "End : Delete Products \n\n";
 
         // Get CED Prodct Criteria (Complete)
@@ -117,7 +117,7 @@ class SyncFromPartsDB extends Command
         $import_script->save();
 
         echo "Start : Import CED Product Company Web Status \n";
-        // $this->importPorductCompanyWebStatus();
+        $this->importPorductCompanyWebStatus();
         echo "End : Import CED Product Company Web Status \n\n";
         $import_script->products = 1;
         $import_script->save();
@@ -125,14 +125,14 @@ class SyncFromPartsDB extends Command
 
         //Import Vehicles from the partsdb to local database
         echo "Start : Import Vehicles \n";
-        // $this->importVehicles();
+        $this->importVehicles();
         echo "End : Import Vehicles \n";
         $import_script->vehicle = 1;
         $import_script->save();
 
         //Import Product-Vehicle mapping
         echo "Start : Import Product-Vehicle mapping \n";
-        // $this->importProductVehicleMapping();
+        $this->importProductVehicleMapping();
         echo "End : Import Product-Vehicle mapping \n";
         $import_script->product_vehicles = 1;
         $import_script->save();
@@ -140,7 +140,7 @@ class SyncFromPartsDB extends Command
 
         //Import Vehicle Engine Code
         echo "Start : Import Vehicle Engine Code \n";
-        // $this->importVehicleEngineCode();
+        $this->importVehicleEngineCode();
         echo "End : Import Vehicle Engine Code \n";
         $import_script->vehicle_engine_code = 1;
         $import_script->save();
@@ -148,7 +148,7 @@ class SyncFromPartsDB extends Command
 
         //Import Product-image mapping
         echo "Start : Import Product-image mapping \n" . Carbon::now() . "\n";
-        // $this->importProductImageMapping();
+        $this->importProductImageMapping();
         echo "End : Import Product-image mapping \n" . Carbon::now() . "\n";
         $import_script->product_images = 1;
         $import_script->save();

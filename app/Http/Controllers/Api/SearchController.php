@@ -8,6 +8,7 @@ use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BaseController;
 use App\Repositories\ProductsRepository;
+use App\Repositories\PartsDBAPIRepository;
 
 class SearchController extends BaseController
 {
@@ -17,11 +18,12 @@ class SearchController extends BaseController
      *
      * @return void
      */
-    public $productsRepository;
+    public $productsRepository, $partsdbapirepository;
 
-    public function __construct(ProductsRepository $productsRepository)
+    public function __construct(ProductsRepository $productsRepository, PartsDBAPIRepository $partsdbapirepository)
     {
         $this->productsRepository = $productsRepository;
+        $this->partsdbapirepository = $partsdbapirepository;
     }
 
     /**
@@ -40,8 +42,8 @@ class SearchController extends BaseController
      * @queryParam rego_number (String) vehicle Rego Number Example:99
      * @queryParam state String (ACT, NSW, NT, QLD, SA, TAS, VIC, WA) Example:SA
      * @queryParam vin_number (String) VIN Number Example:JF1BL5KS57G03135
-     * 
-     *  
+     *
+     *
      */
     public function index(Request $request)
     {
@@ -70,7 +72,7 @@ class SearchController extends BaseController
      * @queryParam cc (String) car engine cc  Example:1985
      * @queryParam power (String) car engine power  Example:81
      * @queryParam body_type (String) car body type Example:Hatchback
-     *  
+     *
      */
     public function searchProductsDropdowns(Request $request)
     {
@@ -135,7 +137,7 @@ class SearchController extends BaseController
      * @group Search Filters
      * Search Form Makes
      * This API will return All Makes (Car Company).
-     *  
+     *
      */
     public function makes()
     {
@@ -157,16 +159,52 @@ class SearchController extends BaseController
      * @group Search Filters
      * Search Form Models
      * This API will return All Models of particuler make(company) makes/{2}/models.
-     *  
+     *
      */
     public function models($id)
     {
-
         try {
+            $this->partsdbapirepository->login();
+            $makes_and_models = $this->partsdbapirepository->getAllMakesAndModels();
+            $db_makes = Make::all()->pluck('id')->toArray();
+            $makes_array = [];
+            foreach ($makes_and_models->ListMakes as $make) {
+                if (!in_array($make->ID, $db_makes)) {
+                    $makes_array[] = [
+                        'id' => $make->ID,
+                        'name' => $make->Make,
+                    ];
+                }
+            }
+
+            if (!empty($makes_array)) {
+                Make::insert($makes_array);
+            }
+
+            $db_models = Models::all()->pluck('name')->toArray();
+            $models_array = [];
+            foreach ($makes_and_models->ListModels as $model) {
+
+                if (!in_array($model->Model, $db_models)) {
+                    $models_array[] = [
+                        'make_id' => $model->MakeID,
+                        'name' => $model->Model,
+                    ];
+                }
+
+                if (count($models_array) >= 1000) {
+                    Models::insert($models_array);
+                    $models_array = [];
+                }
+            }
+
+            if (count($models_array) > 0) {
+                Models::insert($models_array);
+                $models_array = [];
+            }
             $models = Models::where('make_id', $id)->select('id', 'name')->get();
             return $this->sendResponse($models, "Models");
         } catch (\Exception $e) {
-
             return $this->sendError($e->getMessage(), [], 401);
         }
     }

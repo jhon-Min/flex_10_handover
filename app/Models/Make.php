@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Make extends Model
 {
-    //
+    protected $fillable = ['id', 'name'];
     protected $hidden = [
         'created_at', 'updated_at',
     ];

@@ -44,16 +44,14 @@ class BrandController extends BaseController
             $brand_api =  $this->partsdbapirepository->getAllBrands();
 
             foreach ($brand_api as $brand) {
-                if ($brand->BrandName != "TRW" && $brand->BrandName != "DOGA" && $brand->BrandName !=  "REMSA" && $brand->BrandName !=  "BOSCH") {
-                    $brands_data = Brand::firstOrCreate(
-                        [
-                            'id' => $brand->ID,
-                            'name' => $brand->BrandName,
-                        ],
-                    );
-                    $brands_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
-                    $brands_data->save();
-                }
+                $brands_data = Brand::firstOrCreate(
+                    [
+                        'id' => $brand->ID,
+                        'name' => $brand->BrandName,
+                    ],
+                );
+                $brands_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
+                $brands_data->save();
             }
 
             $brands = Brand::all();
