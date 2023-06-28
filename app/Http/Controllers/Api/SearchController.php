@@ -144,12 +144,16 @@ class SearchController extends BaseController
         try {
             $this->partsdbapirepository->login();
             $make_api = $this->partsdbapirepository->getAllMakes();
+
             foreach ($make_api as $make) {
-                Make::firstOrCreate([
-                    'id' => $make->ID,
-                    'name' => $make->Make,
-                ]);
+                if (is_object($make) && isset($make->ID)) {
+                    Make::updateOrCreate(
+                        ['id' => $make->ID],
+                        ['name' => $make->Make]
+                    );
+                }
             }
+
 
             $common_makes = Make::where('is_common', '1')->orderBy('name', 'ASC')->get();
             $makes = Make::orderBy('name', 'ASC')->get();
