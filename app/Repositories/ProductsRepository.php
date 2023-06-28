@@ -2,21 +2,31 @@
 
 namespace App\Repositories;
 
-
+use App\Traits\API;
+use App\Models\Brand;
+use App\Models\Branch;
 use App\Models\Product;
 use App\Models\SearchHistory;
+use App\Models\ProductCategory;
 use App\Models\ProductQuantity;
-use App\Models\Branch;
-use App\Traits\API;
-use App\Repositories\PartsDBAPIRepository;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Repositories\PartsDBAPIRepository;
 
 class ProductsRepository extends BaseRepository
 {
     use API;
 
+    public $partsdbapirepository, $last_updated = null;
 
-    public function getVehicles($filters = array(), $paginate = FALSE, $page = 1, $per_page = 20)
+    public function __construct(PartsDBAPIRepository $partsdbapirepository)
+    {
+        $this->partsdbapirepository = $partsdbapirepository;
+        $this->last_updated = date('Y-m-d');
+    }
+
+
+    public function getVehicles($filters = array(), $paginate = FALSE, $page = 1, $per_page = 50)
     {
         $vehicles = null;
 
@@ -35,8 +45,9 @@ class ProductsRepository extends BaseRepository
         return $vehicles;
     }
 
-    public function getProducts($filters = array(), $paginate = FALSE, $page = 1, $per_page = 20)
+    public function getProducts($filters = array(), $paginate = FALSE, $page = 1, $per_page = 50)
     {
+        $product_api = $this->importProducts();
         $products = Product::with(['brand', 'vehicles', 'vehicles.make', 'vehicles.model', 'images', 'categories', 'criteria']);
         $products->CompanyWebStatus();
 
@@ -192,6 +203,7 @@ class ProductsRepository extends BaseRepository
             }
         } elseif ($paginate) {
             $products = $products->select('products.*')->paginate($per_page);
+
             // return $products = $products->select('products.*')->paginate($per_page);
         } else {
             $products = $products->select('products.*')->get();
@@ -255,7 +267,6 @@ class ProductsRepository extends BaseRepository
 
 
         $in_stock = $flag_no_stock > 0 ? 1 : 0;
-
         if (!empty($part_type) && !empty($paginate)) {
             SearchHistory::create([
                 'user_id'      => $userInfo->id,
@@ -278,6 +289,306 @@ class ProductsRepository extends BaseRepository
         }
 
         return $products;
+    }
+
+    public function importProducts()
+    {
+
+        $this->createProductsTempTable();
+
+        $db_brands = Brand::all()->pluck('id')->toArray();
+
+        $products_array = [];
+        $product_nr_sku_category = [];
+
+        foreach ($db_brands as $brand_id) {
+
+            $PageNum = 1;
+            while ($products = $this->partsdbapirepository->getProductsSubscribed($brand_id, $PageNum, 1000)) {
+                foreach ($products as $product) {
+
+                    //fetch product categories
+                    $ced_product_categories =  $this->partsdbapirepository->getCEDProductCategories($product->ProductNr, $product->BrandID);
+
+                    if (count($ced_product_categories) > 0) {
+
+                        foreach ($ced_product_categories as $ced_product_category) {
+
+                            //fetch product linked parts
+                            $corresponding_numbers = $this->partsdbapirepository->getProductCorrespondingPartNmuber($product->BrandID, $product->ProductNr, $ced_product_category->CompanySKU);
+
+                            $cross_reference_numbers = $associated_part_numbers = [];
+                            if (count($corresponding_numbers) > 0) {
+                                foreach ($corresponding_numbers as $corresponding_number) {
+                                    if ($corresponding_number->LinkType == 'Associated Parts') {
+                                        $associated_part_numbers[] = $corresponding_number->LinkProductNr;
+                                    } else if ($corresponding_number->LinkType == 'Cross Reference') {
+                                        $cross_reference_numbers[] = $corresponding_number->LinkProductNr;
+                                    }
+                                }
+                            }
+
+                            //Fetch product attributes
+                            $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
+
+                            $product_details = [
+                                'brand_id' => $product->BrandID,
+                                'product_nr' => $product->ProductNr,
+                                'name' => $product->StandardDescription,
+                                'description' => $product->StandardDescription,
+                                'cross_reference_numbers' => implode(',', $cross_reference_numbers),
+                                'associated_part_numbers' => implode(',', $associated_part_numbers),
+                                'company_sku' => $ced_product_category->CompanySKU,
+                                'standard_description_id' => $product->StandardDescriptionID,
+                                'last_updated' => $this->last_updated
+                            ];
+
+                            $product_nr_sku_category[$product->ProductNr . "_" . $ced_product_category->CompanySKU] = $ced_product_category->CategoryID;
+                            $products_array[] = array_merge($product_details, $product_critearea);
+                        }
+                    } else {
+                        //if category mapping not found
+                        //Fetch product attributes
+                        $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
+
+                        $product_details = [
+                            'brand_id' => $product->BrandID,
+                            'product_nr' => $product->ProductNr,
+                            'name' => $product->StandardDescription,
+                            'description' => $product->StandardDescription,
+                            'cross_reference_numbers' => '',
+                            'associated_part_numbers' => '',
+                            'company_sku' => '',
+                            'standard_description_id' => $product->StandardDescriptionID,
+                            'last_updated' => $this->last_updated
+                        ];
+
+                        $products_array[] = array_merge($product_details, $product_critearea);
+                    }
+
+                    if (count($products_array) >= 1000) {
+                        $this->process($products_array, 'products_tmp');
+                        $this->processProductCategoryMapping($product_nr_sku_category);
+                        $products_array = [];
+                        $product_nr_sku_category = [];
+                    }
+                }
+                $PageNum++;
+            }
+        }
+
+        if (count($products_array) > 0) {
+            $this->process($products_array, 'products_tmp');
+            $this->processProductCategoryMapping($product_nr_sku_category);
+            $products_array = [];
+            $product_nr_sku_category = [];
+        }
+
+        $this->dropTable('products_tmp');
+    }
+
+    public function getProductAttributes($brand_id, $product_nr, $standard_description_id)
+    {
+
+        $critearea = [
+            'brake_system' => '',
+            'length' => '',
+            'fitting_position' => '',
+            'height' => '',
+            'thickness' => '',
+            'weight' => '',
+        ];
+
+        $product_critearea =  $this->partsdbapirepository->getProductCriteria($brand_id, $product_nr, $standard_description_id);
+
+        if (count($product_critearea) > 0) {
+
+            foreach ($product_critearea as $criteara) {
+
+                $critearea['product_nr'] = $product_nr;
+                $critearea['brand_id'] = $brand_id;
+
+                if (isset($criteara->Criteria) && !empty($criteara->Criteria)) {
+                    if ($criteara->Criteria == 'Brake System' || $criteara->Criteria == 'Brake Type') {
+                        $critearea['brake_system'] = $criteara->Value;
+                    } elseif ($criteara->Criteria == 'Length [mm]') {
+                        $critearea['length'] = $criteara->Value;
+                    } elseif ($criteara->Criteria == 'Fitting Position') {
+                        $critearea['fitting_position'] = $criteara->Value;
+                    } elseif ($criteara->Criteria == 'Height [mm]') {
+                        $critearea['height'] = $criteara->Value;
+                    } elseif ($criteara->Criteria == 'Weight [kg]') {
+                        $critearea['weight'] = $criteara->Value;
+                    } elseif ($criteara->Criteria == 'Thickness' || $criteara->Criteria == 'Thickness [mm]') {
+                        $critearea['thickness'] = $criteara->Value;
+                    } else {
+                    }
+                }
+            }
+        }
+
+        return $critearea;
+    }
+
+    public function createProductsTempTable()
+    {
+        $sql1 = "DROP TABLE IF EXISTS `products_tmp`;";
+        $sql2 = "CREATE TABLE `products_tmp` (
+                  `brand_id` bigint(20) UNSIGNED NOT NULL,
+                  `product_nr` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `name` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `cross_reference_numbers` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `associated_part_numbers` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `fitting_position` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `company_sku` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `brake_system` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `length` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `height` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `thickness` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `weight` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `standard_description_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                  `last_updated` date COLLATE utf8mb4_unicode_ci DEFAULT NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+
+        DB::statement($sql1);
+        DB::statement($sql2);
+    }
+
+    public function dropTable($table)
+    {
+
+        $sql = "DROP TABLE IF EXISTS `$table`";
+        DB::statement($sql);
+    }
+
+    public function process(array $records, $table)
+    {
+
+        if (count($records) == 0) {
+            return true;
+        }
+
+        $first = reset($records);
+        $columns = implode(
+            ',',
+            array_map(function ($value) {
+                return "`$value`";
+            }, array_keys($first))
+        );
+
+        $values = implode(
+            ',',
+            array_map(function ($record) {
+                return '(' . implode(
+                    ',',
+                    array_map(function ($value) {
+                        return '"' . str_replace('"', '""', $value) . '"';
+                    }, $record)
+                ) . ')';
+            }, $records)
+        );
+
+        $sql = "insert into $table({$columns}) values {$values}";
+        DB::statement($sql);
+
+        if ($table == 'products_tmp') {
+            $this->insertOrUpdateProducts();
+        }
+
+        if ($table == 'porduct_company_web_statuses_tmp') {
+            $this->insertOrUpdateProductCompanyWebStatus();
+        }
+
+        echo "\nProcessed " . count($records) . "\n";
+        return true;
+    }
+
+    public function createProductCompanyWebStatusTempTable()
+    {
+        $sql1 = "DROP TABLE IF EXISTS `porduct_company_web_statuses_tmp`;";
+        $sql2 = "CREATE TABLE `porduct_company_web_statuses_tmp` (
+          `id` bigint(20) UNSIGNED NOT NULL,
+          `product_nr` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+          `company_sku` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+          `company_web_status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+
+        DB::statement($sql1);
+        DB::statement($sql2);
+    }
+
+    public function importPorductCompanyWebStatus()
+    {
+        $this->createProductCompanyWebStatusTempTable();
+        $db_brands = Brand::all()->pluck('id')->toArray();
+        $products_array = [];
+        foreach ($db_brands as $brand_id) {
+
+            $products = $this->partsdbapirepository->getCEDProductsSubscribed($brand_id);
+            foreach ($products as $product) {
+                $products_array[] = [
+                    'company_sku' => $product->CompanySKU,
+                    'product_nr' => $product->ProductNr,
+                    'company_web_status' => $product->CompanyWeb
+                ];
+            }
+
+            if (count($products_array) >= 1000) {
+                $this->process($products_array, 'porduct_company_web_statuses_tmp');
+                $products_array = [];
+            }
+        }
+
+        if (count($products_array) > 0) {
+            $this->process($products_array, 'porduct_company_web_statuses_tmp');
+            $products_array = [];
+        }
+
+        $this->dropTable('porduct_company_web_statuses_tmp');
+    }
+
+    public function insertOrUpdateProductCompanyWebStatus()
+    {
+
+        $sql = "INSERT INTO porduct_company_web_statuses (product_nr, company_sku, company_web_status ) SELECT t.product_nr, t.company_sku, t.company_web_status FROM porduct_company_web_statuses_tmp t ON DUPLICATE KEY UPDATE company_web_status = t.company_web_status";
+
+        DB::statement($sql);
+
+        $this->truncateTable('porduct_company_web_statuses_tmp');
+    }
+
+    public function truncateTable($table)
+    {
+
+        $sql = "TRUNCATE TABLE " . $table;
+        DB::statement($sql);
+    }
+
+    public function processProductCategoryMapping($product_nr_sku_category)
+    {
+
+        $db_products = Product::selectRaw(DB::raw('CONCAT(product_nr, "_", company_sku) as product_nr_sku, id as product_id'))->pluck('product_id', 'product_nr_sku')->toArray();
+
+        $db_product_category = ProductCategory::selectRaw(DB::raw('CONCAT(product_id, "_", category_id) as product_category'))->pluck('product_category')->toArray();
+
+        $db_product_category_new = [];
+
+        foreach ($product_nr_sku_category as $product_nr_sku => $category_id) {
+
+            $product_id = $db_products[$product_nr_sku];
+
+            if (!in_array($product_id, $db_product_category)) {
+                $db_product_category_new[] = [
+                    'product_id' => $product_id,
+                    'category_id' => $category_id
+                ];
+            }
+        }
+
+        if (count($db_product_category_new) > 0) {
+            ProductCategory::insert($db_product_category_new);
+        }
     }
 
     public function getAssociatedProducts($part_numbers = array())

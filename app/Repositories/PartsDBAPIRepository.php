@@ -125,6 +125,12 @@ class PartsDBAPIRepository extends BaseRepository
         return $products ?? [];
     }
 
+    public function getAllProducts()
+    {
+        $products = $this->callPartsDBAPI(config('partsdb.products-subscribed'));
+        return $products;
+    }
+
     public function getCEDCategoryProducts($category_id)
     {
         $products_all = [];
