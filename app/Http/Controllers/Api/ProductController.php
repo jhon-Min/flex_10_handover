@@ -78,7 +78,7 @@ class ProductController extends BaseController
                 return $this->sendError('Invalid input', $validator->errors()->all(), 401);
             }
 
-            $products = $this->productsrepository->getProdCucts($request->all(), $paginate, $request->page, $request->per_page);
+            $products = $this->productsrepository->getProducts($request->all(), $paginate, $request->page, $request->per_page);
 
             return $this->sendResponse($products, "Products");
         } catch (\Exception $e) {
