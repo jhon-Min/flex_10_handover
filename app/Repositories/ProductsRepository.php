@@ -47,12 +47,6 @@ class ProductsRepository extends BaseRepository
 
     public function getProducts($filters = array(), $paginate = FALSE, $page = 1, $per_page = 50)
     {
-        $this->partsdbapirepository->login();
-        try {
-            $product_api = $this->importProducts();
-        } catch (\Throwable $th) {
-            return $th->getTraceAsString();
-        }
         $products = Product::with(['brand', 'vehicles', 'vehicles.make', 'vehicles.model', 'images', 'categories', 'criteria']);
         $products->CompanyWebStatus();
 
