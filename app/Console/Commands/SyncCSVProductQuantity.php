@@ -53,9 +53,9 @@ class SyncCSVProductQuantity extends Command
         echo "CSV Start : Import Product QTY\n";
         Log::info("CSV Started : Import Product QTY");
 
-        $filepath = "/home/ec2-user/bulkupload/prod.csv";
+        $filepath = "/csv/prod.csv";
 
-        $handle = fopen("/home/ec2-user/fd-backend/public/uploads/products-stock/dummy.txt", "a");
+        $handle = fopen("/csv/products-stock/dummy.txt", "a");
         fwrite($handle, "Background process started at " . date("Y-m-d H:i:s") . PHP_EOL);
         $csv_data = fopen($filepath, "r");
         $importData_arr = array();

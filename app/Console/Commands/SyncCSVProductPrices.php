@@ -52,10 +52,11 @@ class SyncCSVProductPrices extends Command
         echo "CSV Start : Import Product Price\n";
         Log::info("CSV Started : Import Product Price");
 
-        $filepath = "/home/ec2-user/bulkupload/cust.csv";
-        $filepath1 = "/home/ec2-user/bulkupload/pric.csv";
-        $handle = fopen("/home/ec2-user/fd-backend/public/uploads/products-price/product_customer_price.txt", "a");
-        fwrite($handle, "Background process started at " . date("Y-m-d H:i:s") . PHP_EOL);
+        $filepath = "/home/kimmich/Documents/csv/cust.csv";
+        $filepath1 = "/home/kimmich/Documents/csv/pric.csv";
+        Log::info("Start to write database");
+        // $handle = fopen("/home/ec2-user/fd-backend/public/uploads/products-price/product_customer_price.txt", "a");
+        // fwrite($handle, "Background process started at " . date("Y-m-d H:i:s") . PHP_EOL);
         $csv_data = fopen($filepath, "r");
         $csv_data1 = fopen($filepath1, "r");
         $importData_arr = array();

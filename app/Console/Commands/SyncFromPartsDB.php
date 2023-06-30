@@ -77,7 +77,7 @@ class SyncFromPartsDB extends Command
 
         // Get all brands that available to the customer from parts db and import in local database (Complete)
         echo "Start : Import Brands \n";
-        // $this->importBrands();
+        $this->importBrands();
         echo "End : Import Brands \n\n";
         $import_script->brand = 1;
         $import_script->save();
@@ -100,13 +100,13 @@ class SyncFromPartsDB extends Command
         //Import Products from the partsdb to local database with make, model, vehicle mapping (Complete)
         echo "Start : Import Products \n";
         Log::info("Start : Import Products");
-        $this->importProducts();
+        // $this->importProducts();
         Log::info("End : Import Products");
         echo "End : Import Products \n\n";
 
         //delete Products from local db which are removed from parts db and not coming in sync
         echo "Start : Delete Products \n";
-        $this->deleteProducts();
+        // $this->deleteProducts();
         echo "End : Delete Products \n\n";
 
         // Get CED Prodct Criteria (Complete)
