@@ -29,39 +29,47 @@ class SyncStockCron extends Command
     public function handle()
     {
         ini_set('memory_limit', '-1');
-
         echo "Stock Start \n";
-        Log::info("Stock Started : start working now");
 
         $filepath = env('STOCK_PATH');
-        $file = fopen($filepath, "r");
-        $start_time = date('Y-m-d H:i:s');
+        $timestamp = filectime($filepath);
+        $currentTimestamp = time();
 
-        // Read the CSV file line by line
-        while (($row = fgetcsv($file)) !== false) {
-            // Push the row data into the array
-            $product_nr = $row[0];
-            $qty = $row[1];
-            $company_sku = $row[2];
-            $id = $this->getProductWithSku($company_sku);
+        if ($timestamp == $currentTimestamp) {
+            Log::info("Stock Started : start working now");
 
-            if (!empty($id)) {
-                $update = Product::where('id', $id)->update([
-                    'product_nr' => $product_nr,
-                    'qty' => $qty,
-                    'product_nr' => $product_nr,
-                ]);
+            $file = fopen($filepath, "r");
+            $start_time = date('Y-m-d H:i:s');
+
+            // Read the CSV file line by line
+            while (($row = fgetcsv($file)) !== false) {
+                // Push the row data into the array
+                $product_nr = $row[0];
+                $qty = $row[1];
+                $company_sku = $row[2];
+                $id = $this->getProductWithSku($company_sku);
+
+                if (!empty($id)) {
+                    $update = Product::where('id', $id)->update([
+                        'product_nr' => $product_nr,
+                        'qty' => $qty,
+                        'product_nr' => $product_nr,
+                    ]);
+                }
             }
-        }
-        // Close the file
-        fclose($file);
+            // Close the file
+            fclose($file);
 
-        $productImportStatus = new ProductImportStatus();
-        $productImportStatus->file_path = $filepath;
-        $productImportStatus->status = 'Complete';
-        $productImportStatus->start_time = $start_time;
-        $productImportStatus->import_type = 'stock';
-        $productImportStatus->save();
+            $productImportStatus = new ProductImportStatus();
+            $productImportStatus->file_path = $filepath;
+            $productImportStatus->status = 'Complete';
+            $productImportStatus->start_time = $start_time;
+            $productImportStatus->import_type = 'stock';
+            $productImportStatus->save();
+        } else {
+            Log::info("Current time $currentTimestamp");
+            Log::info("$timestamp Stock Started : The Csv file is not updated");
+        }
     }
 
     private function getProductWithSku($company_sku)

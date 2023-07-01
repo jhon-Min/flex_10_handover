@@ -49,8 +49,8 @@ class SyncCSVProductPrices extends Command
 
         ini_set('memory_limit', '-1');
 
-        echo "CSV Start : Import Product Price\n";
-        Log::info("CSV Started : Import Product Price");
+        echo "Product and Customer working start \n";
+        Log::info("Stock Started : start working now");
 
         $filepath = "/home/kimmich/Documents/csv/cust.csv";
         $filepath1 = "/home/kimmich/Documents/csv/pric.csv";
@@ -131,7 +131,6 @@ class SyncCSVProductPrices extends Command
         fclose($csv_data1);
 
         $intCntTotal = 1;
-
         $int = 0;
 
         foreach ($user_list_code as $acnt_code => $code_user) {

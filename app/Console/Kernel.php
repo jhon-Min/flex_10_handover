@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('sync:csvproduct:prices')->everyMinute();
         // $schedule->command('sync:csvproduct:qty')->everyMinute();
         $schedule->command('stock:cron')->everyMinute();
+        $schedule->command('productprice:cron')->everyMinute();
     }
 
     /**
