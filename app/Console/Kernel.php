@@ -16,8 +16,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('sync:partsdb')->everyMinute();
-        $schedule->command('sync:csvproduct:prices')->everyMinute();
-        $schedule->command('sync:csvproduct:qty')->everyMinute();
+        // $schedule->command('sync:csvproduct:prices')->everyMinute();
+        // $schedule->command('sync:csvproduct:qty')->everyMinute();
+        $schedule->command('stock:cron')->everyMinute();
     }
 
     /**

@@ -27,6 +27,7 @@ class Product extends Model
         return $user_id;
     }
     protected $appends = ['price_nett', 'price_retail'];
+    protected $fillable = ['product_nr', 'qty'];
 
     public function getPriceNettAttribute($user_id = NULL)
     {
