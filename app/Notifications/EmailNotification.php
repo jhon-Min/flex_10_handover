@@ -55,28 +55,28 @@ class EmailNotification extends Notification
         $mail_to_name = $this->mail_attributes['mail_to_name'];
         $mailable=null;
         switch($this->type){
-            case MailType::NewOrderRecieved:
+            case MailType::NEWORDERRECIEVED:
                 $mailable= new \App\Mail\NewOrderRecievedMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['is_for_admin'],$this->mail_attributes['mail_attachement']);
                 break;
-            case MailType::AdminOrderAction:
+            case MailType::ADMINORDERACTION:
                 $mailable= new \App\Mail\AdminOrderActionMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['action']);
                 break;
-            case MailType::OrderConfirmation:
+            case MailType::ORDERCONFIRMATION:
                 $mailable= new \App\Mail\OrderConfirmationMail($mail_to_email,$this->mail_attributes['mail_body']['order'],$this->mail_attributes['mail_body']['is_for_admin'],$this->mail_attributes['mail_body']['has_exclam'],$this->mail_attributes['mail_attachement']);
                 break;
-            case MailType::OrderCancelation:
+            case MailType::ORDERCANCELATION:
                 $mailable= new \App\Mail\OrderCancelationMail($this->mail_attributes['mail_body']['order'],$mail_to_email,$this->mail_attributes['mail_body']['order_id'],$this->mail_attributes['mail_body']['action']);
                 break;
-            case MailType::UserNotification:
+            case MailType::USERNOTIFICATION:
                 $mailable= new \App\Mail\UserNotificationMail($mail_to_email);
                 break;
-            case MailType::AccountApproveRequest:
+            case MailType::ACCOUNTAPPROVEREQUEST:
                 $mailable= new \App\Mail\AccountApproveRequestMail($mail_to_email);
                 break;
-            case MailType::UserAccountCreated:
+            case MailType::USERACCOUNTCREATED:
                 $mailable= new \App\Mail\UserAccountCreatedMail($mail_to_email);
                 break;
-            case MailType::Contact:
+            case MailType::CONTACT:
                 $mailable= new ContactMail($mail_to_email,$this->mail_attributes['mail_body']['contact']);
                 break;
         }

@@ -167,7 +167,7 @@ class LoginController extends BaseController
 
                 ];
 
-                Helper::sendEmail($mail_attributes,MailType::AccountApproveRequest);
+                Helper::sendEmail($mail_attributes,MailType::ACCOUNTAPPROVEREQUEST);
                 // mail to user
                 $mail_attributes = [
                     'mail_template' => "emails.user_account_created",
@@ -175,7 +175,7 @@ class LoginController extends BaseController
                     'mail_to_name' => $user->name,
                     'mail_subject' => "Flexible Drive : Account Update!",
                 ];
-                Helper::sendEmail($mail_attributes,MailType::UserAccountCreated);
+                Helper::sendEmail($mail_attributes,MailType::USERACCOUNTCREATED);
                 return $this->sendResponse([], "Signup Success.");
             } else {
                 return $this->sendError("Signup Failed", [], 401);

@@ -111,7 +111,7 @@ class OrderService
                 ]
             ];
 
-            Helper::sendEmail($mail_attributes,MailType::AdminOrderAction);
+            Helper::sendEmail($mail_attributes,MailType::ADMINORDERACTION);
             return response()->json(['message' => 'Order is ' . $label], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 401);
@@ -144,7 +144,7 @@ class OrderService
             $is_delete = $order->delete();
 
             if ($is_delete) {
-                Helper::sendEmail($mail_attributes,MailType::AdminOrderAction);
+                Helper::sendEmail($mail_attributes,MailType::ADMINORDERACTION);
                 $response = [
                     'success' => '1',
                     'message' => 'Order has been Deleted',
