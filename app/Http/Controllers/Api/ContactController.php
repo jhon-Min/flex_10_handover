@@ -47,7 +47,7 @@ class ContactController extends BaseController
                     'contact' => $request,
                 ]
             ];
-            Helper::sendEmail($mail_attributes,MailType::Contact);
+            Helper::sendEmail($mail_attributes,MailType::CONTACT);
             return $this->sendResponse([], "Mail send!");
         } catch (\Exception $e) {
 

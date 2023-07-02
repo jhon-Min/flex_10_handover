@@ -18,7 +18,7 @@ class OrderConfirmationMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(private $mail,private $order,private $is_for_admin,private array $attachment)
+    public function __construct(private $mail,private $order,private $is_for_admin,private $hasExclam,private array $attachment)
     {
         //
     }
@@ -29,7 +29,7 @@ class OrderConfirmationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config("mail.mail_team_name").' : Your Order!',
+            subject: config("mail.mail_team_name").' : Your Order'. (($this->hasExclam)?"!":""),
             to: [$this->mail],
             from: new Address(config("mail.from.address"),config("mail.from.name"))
         );

@@ -2,12 +2,12 @@
     namespace App\Mail;
 
     class MailType{
-        public const  NewOrderRecieved = 1;
-        public const AdminOrderAction= 2;
-        public const OrderConfirmation= 3;
-        public const OrderCancelation= 4;
-        public const UserNotification= 5;
-        public const AccountApproveRequest=6;
-        public const UserAccountCreated=7;
-        public const Contact=8;
+        public const  NEWORDERRECIEVED = 1;
+        public const ADMINORDERACTION= 2;
+        public const ORDERCONFIRMATION= 3;
+        public const ORDERCANCELATION= 4;
+        public const USERNOTIFICATION= 5;
+        public const ACCOUNTAPPROVEREQUEST=6;
+        public const USERACCOUNTCREATED=7;
+        public const CONTACT=8;
     }

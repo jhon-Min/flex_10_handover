@@ -105,7 +105,7 @@ class UserService
                     'mail_to_name' => $user->name,
                     // 'mail_subject' => "Flexible Drive : Account Update!",
                 ];
-                Helper::sendEmail($mail_attributes, MailType::UserNotification); // error fix
+                Helper::sendEmail($mail_attributes, MailType::USERNOTIFICATION); // error fix
             }
 
             $badge = Config::get('constant.user_account_status_lables')[$status];

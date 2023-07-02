@@ -43,7 +43,7 @@ class PasswordResetSuccess extends Notification implements ShouldQueue
     {
         $help_line_number = Config::get('constant.HELP_LINE_NUMBER');
         return (new MailMessage)
-            ->subject('Flexibledrive : Password Reset Success')
+            ->subject(config("mail.mail_team_name").' : Password Reset Success')
             ->line('Password Updated.')
             ->line("Your password has been updated successfully. If you didn't request to change your password please contact Flexible Drive immedietly on " . $help_line_number . ".");
     }

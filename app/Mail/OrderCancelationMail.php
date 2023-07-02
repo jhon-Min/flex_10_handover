@@ -44,7 +44,8 @@ class OrderCancelationMail extends Mailable
         return new Content(
             markdown: 'emails.order_cancel',
             with:[
-                'order'=>$this->order,
+                'orders'=>is_a($this->order,'Illuminate\Database\Eloquent\Collection')?$this->order:null,
+                'order'=>is_a($this->order,'Illuminate\Database\Eloquent\Collection')?null:$this->order,
                 'action' => $this->action,
             ]
         );
