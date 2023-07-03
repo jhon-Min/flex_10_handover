@@ -15,9 +15,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('sync:partsdb')->daily('2:00');
-        $schedule->command('stock:cron')->daily()->between('6:00', '16:00');
-        $schedule->command('productprice:cron')->daily()->between('6:00', '16:00');
+        // $schedule->command('sync:partsdb')->daily('2:00');
+        // $schedule->command('stock:cron')->daily()->between('6:00', '16:00');
+        // $schedule->command('productprice:cron')->daily()->between('6:00', '16:00');
+
+        $schedule->command('stock:cron')->everyMinute();
+        $schedule->command('productprice:cron')->everyMinute();
     }
 
     /**

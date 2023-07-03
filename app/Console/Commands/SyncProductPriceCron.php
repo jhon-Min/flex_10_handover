@@ -33,8 +33,11 @@ class SyncProductPriceCron extends Command
         ini_set('memory_limit', '-1');
         echo "Product and Customer working start \n";
 
-        $customer_path = "/home/kimmich/Documents/csv/cust.csv";
-        $price_path = "/home/kimmich/Documents/csv/pric.csv";
+        // $customer_path = "/home/kimmich/Documents/csv/cust.csv";
+        // $price_path = "/home/kimmich/Documents/csv/pric.csv";
+
+        $customer_path = env('CUSTOMER_CSV');
+        $price_path = env('PRICE_CSV');
 
         $timestamp = filectime($customer_path);
         $currentTimestamp = time();
