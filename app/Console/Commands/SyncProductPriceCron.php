@@ -35,7 +35,6 @@ class SyncProductPriceCron extends Command
 
         // $customer_path = "/home/kimmich/Documents/csv/cust.csv";
         // $price_path = "/home/kimmich/Documents/csv/pric.csv";
-
         $customer_path = env('CUSTOMER_CSV');
         $price_path = env('PRICE_CSV');
 
