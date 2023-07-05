@@ -41,20 +41,20 @@ class BrandController extends BaseController
 
         try {
             $this->partsdbapirepository->login();
-            $brands =  $this->partsdbapirepository->getAllBrands();
+            $brand_api =  $this->partsdbapirepository->getAllBrands();
 
-            // foreach ($brand_api as $brand) {
-            //     $brands_data = Brand::firstOrCreate(
-            //         [
-            //             'id' => $brand->ID,
-            //             'name' => $brand->BrandName,
-            //         ],
-            //     );
-            //     $brands_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
-            //     $brands_data->save();
-            // }
+            foreach ($brand_api as $brand) {
+                $brands_data = Brand::firstOrCreate(
+                    [
+                        'id' => $brand->ID,
+                        'name' => $brand->BrandName,
+                    ],
+                );
+                $brands_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
+                $brands_data->save();
+            }
 
-            // $brands = Brand::all();
+            $brands = Brand::all();
             $message = "All brands";
 
             if (!empty($request->all())) {
