@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('stock:cron')->daily()->between('6:00', '16:00');
         // $schedule->command('productprice:cron')->daily()->between('6:00', '16:00');
 
-        $schedule->command('stock:cron')->everyMinute();
+        // $schedule->command('stock:cron')->everyMinute();
     }
 
     /**
