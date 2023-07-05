@@ -255,8 +255,8 @@ class SyncFromPartsDB extends Command
 
             $PageNum = 1;
             while ($products = $this->partsdbapirepository->getProductsSubscribed($brand_id, $PageNum, 2)) {
-                echo "Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products) . "\n";
-                Log::info("Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products));
+                // echo "Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products) . "\n";
+                // Log::info("Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products));
 
 
                 $product_lists = [];
@@ -331,14 +331,14 @@ class SyncFromPartsDB extends Command
                     }
 
 
-                    if (count($products_array) >= 3) {
-                        $this->process($products_array, 'products_tmp');
-                        $this->processProductCategoryMapping($product_nr_sku_category);
-                        $products_array = [];
-                        $product_nr_sku_category = [];
+                    // if (count($products_array) >= 3) {
+                    //     $this->process($products_array, 'products_tmp');
+                    //     $this->processProductCategoryMapping($product_nr_sku_category);
+                    //     $products_array = [];
+                    //     $product_nr_sku_category = [];
 
-                        Log::info("Add 2 record to product temp table");
-                    }
+                    //     Log::info("Add 2 record to product temp table");
+                    // }
 
 
                     Log::info("One time product loop complete");

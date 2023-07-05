@@ -21,10 +21,10 @@ return [
     'makes' => [
         'all' => 'Vehicle/Makes'
     ],
-    'makes-models' => 'Vehicle/MakeModels',    
-    'vehicle' => 'Vehicle/All',  
-    'product-by-vehicle-id' => 'Fitment/ProductsLinkedToVehicleID',  
-    'ced-category-by-brandid-productnr' => 'CED/CEDProductCategories',  
+    'makes-models' => 'Vehicle/MakeModels',
+    'vehicle' => 'Vehicle/All',
+    'product-by-vehicle-id' => 'Fitment/ProductsLinkedToVehicleID',
+    'ced-category-by-brandid-productnr' => 'CED/CEDProductCategories',
     'corresponding-part-number' => 'CED/CEDLinkedProducts',
     'product-reach-content-images' => 'Product/ProductRichContent',
     'product-fitting-position' => 'Product/ProductFittingPositions',
