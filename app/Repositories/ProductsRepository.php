@@ -56,15 +56,67 @@ class ProductsRepository extends BaseRepository
         $product_nr_sku_category = [];
 
         foreach ($db_brands as $brand_id) {
-            // $PageNum = 1;
-            // while ($products = $this->partsdbapirepository->getProductsSubscribed($brand_id, $PageNum, 1000)) {
-
-            // }
             $products_lists = $this->partsdbapirepository->getAllProducts($brand_id);
 
             foreach ($products_lists as $list) {
                 $ced_product_categories =  $this->partsdbapirepository->getCEDProductCategories($list->ProductNr, $list->BrandID);
-                $ced_array[] = $ced_array;
+                if (count($ced_product_categories) > 0) {
+
+                    foreach ($ced_product_categories as $ced_product_category) {
+
+                        //fetch product linked parts
+                        $corresponding_numbers = $this->partsdbapirepository->getProductCorrespondingPartNmuber($list->BrandID, $list->ProductNr, $ced_product_category->CompanySKU);
+
+                        $cross_reference_numbers = $associated_part_numbers = [];
+                        if (count($corresponding_numbers) > 0) {
+                            foreach ($corresponding_numbers as $corresponding_number) {
+                                if ($corresponding_number->LinkType == 'Associated Parts') {
+                                    $associated_part_numbers[] = $corresponding_number->LinkProductNr;
+                                } else if ($corresponding_number->LinkType == 'Cross Reference') {
+                                    $cross_reference_numbers[] = $corresponding_number->LinkProductNr;
+                                }
+                            }
+                        }
+
+                        // //Fetch product attributes
+                        // $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
+
+                        $product_details = [
+                            'brand_id' => $list->BrandID,
+                            'product_nr' => $list->ProductNr,
+                            'name' => $list->StandardDescription,
+                            'description' => $list->StandardDescription,
+                            'cross_reference_numbers' => implode(',', $cross_reference_numbers),
+                            'associated_part_numbers' => implode(',', $associated_part_numbers),
+                            'company_sku' => $ced_product_category->CompanySKU,
+                            'standard_description_id' => $list->StandardDescriptionID,
+                            'last_updated' => $this->last_updated
+                        ];
+
+                        $product_nr_sku_category[$product->ProductNr . "_" . $ced_product_category->CompanySKU] = $ced_product_category->CategoryID;
+                        $products_array[] = array_merge($product_details, $product_critearea);
+                    }
+                } else {
+                    //if category mapping not found
+                    //Fetch product attributes
+                    $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
+
+                    // Log::info("Get Product Cretia");
+
+                    $product_details = [
+                        'brand_id' => $product->BrandID,
+                        'product_nr' => $product->ProductNr,
+                        'name' => $product->StandardDescription,
+                        'description' => $product->StandardDescription,
+                        'cross_reference_numbers' => '',
+                        'associated_part_numbers' => '',
+                        'company_sku' => '',
+                        'standard_description_id' => $product->StandardDescriptionID,
+                        'last_updated' => $this->last_updated
+                    ];
+
+                    $products_array[] = array_merge($product_details, $product_critearea);
+                }
             }
         }
 
@@ -77,7 +129,7 @@ class ProductsRepository extends BaseRepository
         $repository->login();
         ini_set('max_execution_time', '-1');
         ini_set('memory_limit', '-1');
-        return $this->fetchProducts();
+        // return $this->fetchProducts();
 
 
         $products = Product::with(['brand', 'vehicles', 'vehicles.make', 'vehicles.model', 'images', 'categories', 'criteria']);
