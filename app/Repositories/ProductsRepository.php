@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Console\Commands\SyncFromPartsDB;
 use App\Traits\API;
 use App\Models\Brand;
 use App\Models\Branch;
@@ -17,11 +18,12 @@ class ProductsRepository extends BaseRepository
 {
     use API;
 
-    public $partsdbapirepository, $last_updated = null;
+    public $partsdbapirepository, $last_updated = null, $syncpartdb;
 
-    public function __construct(PartsDBAPIRepository $partsdbapirepository)
+    public function __construct(PartsDBAPIRepository $partsdbapirepository, SyncFromPartsDB $syncpartdb)
     {
         $this->partsdbapirepository = $partsdbapirepository;
+        $this->syncpartdb = $syncpartdb;
         $this->last_updated = date('Y-m-d');
     }
 
@@ -47,6 +49,13 @@ class ProductsRepository extends BaseRepository
 
     public function getProducts($filters = array(), $paginate = FALSE, $page = 1, $per_page = 50)
     {
+        $repository = new PartsDBAPIRepository();
+        $repository->login();
+        ini_set('max_execution_time', '-1');
+        ini_set('memory_limit', '-1');
+        $this->syncpartdb->importProducts();
+
+
         $products = Product::with(['brand', 'vehicles', 'vehicles.make', 'vehicles.model', 'images', 'categories', 'criteria']);
         $products->CompanyWebStatus();
 

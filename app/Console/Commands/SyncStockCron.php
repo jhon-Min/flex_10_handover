@@ -32,39 +32,45 @@ class SyncStockCron extends Command
         echo "Stock Start \n";
 
         $filepath = env('STOCK_PATH');
-        $timestamp = filectime($filepath);
-        $currentTimestamp = time();
 
-        Log::info("Stock Started : start working now");
+        try {
+            if (file_exists($filepath)) {
+                Log::info("Stock Started : start working now");
 
-        $file = fopen($filepath, "r");
-        $start_time = date('Y-m-d H:i:s');
+                $file = fopen($filepath, "r");
+                $start_time = date('Y-m-d H:i:s');
 
-        // Read the CSV file line by line
-        while (($row = fgetcsv($file)) !== false) {
-            // Push the row data into the array
-            $product_nr = $row[0];
-            $qty = $row[1];
-            $company_sku = $row[2];
-            $id = $this->getProductWithSku($company_sku);
+                // Read the CSV file line by line
+                while (($row = fgetcsv($file)) !== false) {
+                    // Push the row data into the array
+                    $product_nr = $row[0];
+                    $qty = $row[1];
+                    $company_sku = $row[2];
+                    $id = $this->getProductWithSku($company_sku);
 
-            if (!empty($id)) {
-                $update = Product::where('id', $id)->update([
-                    'product_nr' => $product_nr,
-                    'qty' => $qty,
-                    'product_nr' => $product_nr,
-                ]);
+                    if (!empty($id)) {
+                        $update = Product::where('id', $id)->update([
+                            'product_nr' => $product_nr,
+                            'qty' => $qty,
+                        ]);
+                    }
+                }
+                // Close the file
+                fclose($file);
+
+
+                $productImportStatus = new ProductImportStatus();
+                $productImportStatus->file_path = $filepath;
+                $productImportStatus->status = 'Complete';
+                $productImportStatus->start_time = $start_time;
+                $productImportStatus->import_type = 'stock';
+                $productImportStatus->save();
             }
+        } catch (\Throwable $th) {
+            return $th;
+        } finally {
+            unlink($filepath);
         }
-        // Close the file
-        fclose($file);
-
-        $productImportStatus = new ProductImportStatus();
-        $productImportStatus->file_path = $filepath;
-        $productImportStatus->status = 'Complete';
-        $productImportStatus->start_time = $start_time;
-        $productImportStatus->import_type = 'stock';
-        $productImportStatus->save();
 
         // if ($timestamp == $currentTimestamp) {
 

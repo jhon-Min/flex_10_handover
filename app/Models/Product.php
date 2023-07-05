@@ -27,7 +27,8 @@ class Product extends Model
         return $user_id;
     }
     protected $appends = ['price_nett', 'price_retail'];
-    protected $fillable = ['product_nr', 'qty'];
+    protected $fillable = ['product_nr', 'qty', 'brand_id', 'name', 'description', 'cross_reference_numbers', 'associated_part_numbers', 'company_sku', 'standard_description_id', 'last_updated'];
+
 
     public function getPriceNettAttribute($user_id = NULL)
     {

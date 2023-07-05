@@ -77,7 +77,7 @@ class SyncFromPartsDB extends Command
 
         // Get all brands that available to the customer from parts db and import in local database (Complete)
         echo "Start : Import Brands \n";
-        $this->importBrands();
+        // $this->importBrands();
         echo "End : Import Brands \n\n";
         $import_script->brand = 1;
         $import_script->save();
@@ -160,7 +160,7 @@ class SyncFromPartsDB extends Command
     }
 
     // Done min
-    private function importBrands()
+    protected function importBrands()
     {
         $brands = $this->partsdbapirepository->getAllBrands();
         foreach ($brands as $brand) {
@@ -177,7 +177,7 @@ class SyncFromPartsDB extends Command
     }
 
     // Done min
-    private function importCategories()
+    protected function importCategories()
     {
 
         $db_categories = Category::all()->pluck('id')->toArray();
@@ -199,7 +199,7 @@ class SyncFromPartsDB extends Command
         }
     }
 
-    private function importMakeAndModel()
+    protected function importMakeAndModel()
     {
 
         $makes_and_models = $this->partsdbapirepository->getAllMakesAndModels();
@@ -241,10 +241,10 @@ class SyncFromPartsDB extends Command
         }
     }
 
-    private function importProducts()
+    public function importProducts()
     {
 
-        $this->createProductsTempTable();
+        // $this->createProductsTempTable();
 
         $db_brands = Brand::all()->pluck('id')->toArray();
 
@@ -253,25 +253,31 @@ class SyncFromPartsDB extends Command
 
         foreach ($db_brands as $brand_id) {
 
-            // $products = $this->partsdbapirepository->getProductsSubscribed($brand_id);
-            // echo "Brand ID : " . $brand_id . " > Products Fetched : " . count($products) . "\n";
-
             $PageNum = 1;
-            while ($products = $this->partsdbapirepository->getProductsSubscribed($brand_id, $PageNum, 1000)) {
+            while ($products = $this->partsdbapirepository->getProductsSubscribed($brand_id, $PageNum, 2)) {
                 echo "Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products) . "\n";
                 Log::info("Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products));
 
-                foreach ($products as $product) {
 
+                $product_lists = [];
+
+                foreach ($products as $product) {
+                    Log::info("Loop a product");
                     //fetch product categories
                     $ced_product_categories =  $this->partsdbapirepository->getCEDProductCategories($product->ProductNr, $product->BrandID);
+
+                    Log::info("Get CED Product Cate");
+
+
 
                     if (count($ced_product_categories) > 0) {
 
                         foreach ($ced_product_categories as $ced_product_category) {
-
+                            Log::info("Start Loop CED Product Cate");
                             //fetch product linked parts
                             $corresponding_numbers = $this->partsdbapirepository->getProductCorrespondingPartNmuber($product->BrandID, $product->ProductNr, $ced_product_category->CompanySKU);
+
+                            Log::info("Get Part Number");
 
                             $cross_reference_numbers = $associated_part_numbers = [];
                             if (count($corresponding_numbers) > 0) {
@@ -307,6 +313,8 @@ class SyncFromPartsDB extends Command
                         //Fetch product attributes
                         $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
 
+                        // Log::info("Get Product Cretia");
+
                         $product_details = [
                             'brand_id' => $product->BrandID,
                             'product_nr' => $product->ProductNr,
@@ -322,33 +330,38 @@ class SyncFromPartsDB extends Command
                         $products_array[] = array_merge($product_details, $product_critearea);
                     }
 
-                    if (count($products_array) >= 1000) {
+
+                    if (count($products_array) >= 3) {
                         $this->process($products_array, 'products_tmp');
                         $this->processProductCategoryMapping($product_nr_sku_category);
                         $products_array = [];
                         $product_nr_sku_category = [];
+
+                        Log::info("Add 2 record to product temp table");
                     }
+
+
+                    Log::info("One time product loop complete");
                 }
                 $PageNum++;
             }
         }
 
         if (count($products_array) > 0) {
-            $this->process($products_array, 'products_tmp');
+            $this->process($products_array, 'products');
             $this->processProductCategoryMapping($product_nr_sku_category);
             $products_array = [];
             $product_nr_sku_category = [];
+            Log::info("Add record to product table");
         }
-
-        $this->dropTable('products_tmp');
     }
 
-    private function deleteProducts()
+    protected function deleteProducts()
     {
         Product::where('last_updated', '<>', $this->last_updated)->delete();
     }
 
-    private function processProductCategoryMapping($product_nr_sku_category)
+    protected function processProductCategoryMapping($product_nr_sku_category)
     {
 
         $db_products = Product::selectRaw(DB::raw('CONCAT(product_nr, "_", company_sku) as product_nr_sku, id as product_id'))->pluck('product_id', 'product_nr_sku')->toArray();
@@ -375,7 +388,7 @@ class SyncFromPartsDB extends Command
     }
 
     // Done min
-    private function getProductAttributes($brand_id, $product_nr, $standard_description_id)
+    protected function getProductAttributes($brand_id, $product_nr, $standard_description_id)
     {
 
         $critearea = [
@@ -418,49 +431,52 @@ class SyncFromPartsDB extends Command
         return $critearea;
     }
 
-    private function process(array $records, $table)
+    protected function process(array $records, $table)
     {
 
         if (count($records) == 0) {
             return true;
         }
 
-        $first = reset($records);
-        $columns = implode(
-            ',',
-            array_map(function ($value) {
-                return "`$value`";
-            }, array_keys($first))
-        );
-
-        $values = implode(
-            ',',
-            array_map(function ($record) {
-                return '(' . implode(
-                    ',',
-                    array_map(function ($value) {
-                        return '"' . str_replace('"', '""', $value) . '"';
-                    }, $record)
-                ) . ')';
-            }, $records)
-        );
-
-        $sql = "insert into $table({$columns}) values {$values}";
-        DB::statement($sql);
-
-        if ($table == 'products_tmp') {
-            $this->insertOrUpdateProducts();
+        foreach ($records as $record) {
+            Log::info($record);
+            if ($product = Product::where('product_nr', $record['product_nr'])->where('brand_id', $record['brand_id'])->first()) {
+                Log::info('exists product');
+                $product->update([
+                    'brand_id' => $record['brand_id'],
+                    'product_nr' => $record['product_nr'],
+                    'name' => $record['name'],
+                    'description' => $record['description'],
+                    'cross_reference_numbers' => $record['cross_reference_numbers'],
+                    'associated_part_numbers' => $record['associated_part_numbers'],
+                    'company_sku' => $record['company_sku'],
+                    'standard_description_id' => $record['standard_description_id'],
+                    'last_updated' => $record['last_updated']
+                ]);
+            } else {
+                Product::create([
+                    'brand_id' => $record['brand_id'],
+                    'product_nr' => $record['product_nr'],
+                    'name' => $record['name'],
+                    'description' => $record['description'],
+                    'cross_reference_numbers' => $record['cross_reference_numbers'],
+                    'associated_part_numbers' => $record['associated_part_numbers'],
+                    'company_sku' => $record['company_sku'],
+                    'standard_description_id' => $record['standard_description_id'],
+                    'last_updated' => $record['last_updated']
+                ]);
+            }
         }
 
-        if ($table == 'porduct_company_web_statuses_tmp') {
-            $this->insertOrUpdateProductCompanyWebStatus();
-        }
+        // if ($table == 'porduct_company_web_statuses_tmp') {
+        //     $this->insertOrUpdateProductCompanyWebStatus();
+        // }
 
         echo "\nProcessed " . count($records) . "\n";
         return true;
     }
 
-    private function createProductsTempTable()
+    protected function createProductsTempTable()
     {
         $sql1 = "DROP TABLE IF EXISTS `products_tmp`;";
         $sql2 = "CREATE TABLE `products_tmp` (
@@ -485,31 +501,31 @@ class SyncFromPartsDB extends Command
         DB::statement($sql2);
     }
 
-    private function insertOrUpdateProducts()
+    protected function insertOrUpdateProducts()
     {
 
         $sql = "INSERT INTO products (brand_id, product_nr, name, description, cross_reference_numbers, associated_part_numbers, fitting_position, company_sku, brake_system, length, height, thickness, weight, standard_description_id, last_updated) SELECT t.brand_id, t.product_nr, t.name, t.description, t.cross_reference_numbers, t.associated_part_numbers, t.fitting_position, t.company_sku, t.brake_system, t.length, t.height, t.thickness, t.weight, t.standard_description_id, t.last_updated FROM products_tmp t ON DUPLICATE KEY UPDATE brand_id = t.brand_id, product_nr = t.product_nr, name = t.name, description = t.description, cross_reference_numbers = t.cross_reference_numbers, associated_part_numbers = t.associated_part_numbers, fitting_position = t.fitting_position, company_sku = t.company_sku, brake_system = t.brake_system, length = t.length, height = t.height, thickness = t.thickness, weight = t.weight, standard_description_id = t.standard_description_id, last_updated = t.last_updated";
 
         DB::statement($sql);
-
-        $this->truncateTable('products_tmp');
+        Log::info("Complete Insert or Update product");
+        // $this->truncateTable('products_tmp');
     }
 
-    private function dropTable($table)
+    protected function dropTable($table)
     {
 
         $sql = "DROP TABLE IF EXISTS `$table`";
         DB::statement($sql);
     }
 
-    private function truncateTable($table)
+    protected function truncateTable($table)
     {
 
         $sql = "TRUNCATE TABLE " . $table;
         DB::statement($sql);
     }
 
-    private function importVehicles()
+    protected function importVehicles()
     {
 
         $this->truncateTable('vehicle_tmp');
@@ -570,7 +586,7 @@ class SyncFromPartsDB extends Command
         $this->truncateTable('vehicle_tmp');
     }
 
-    private function insertOrUpdateVehicles()
+    protected function insertOrUpdateVehicles()
     {
 
         $sql = "INSERT INTO vehicles (id, make_id, model_id, year_from, year_to, year_range, sub_model, chassis_code, engine_code, cc, power, body_type, brake_system) SELECT t.id, t.make_id, t.model_id, t.year_from, t.year_to, t.year_range, t.sub_model, t.chassis_code, t.engine_code, t.cc, t.power, t.body_type, t.brake_system FROM vehicle_tmp t ON DUPLICATE KEY UPDATE make_id = t.make_id, model_id = t.model_id, year_from = t.year_from, year_to = t.year_to, year_range = t.year_range, sub_model = t.sub_model, chassis_code = t.chassis_code, engine_code = t.engine_code, cc = t.cc, power = t.power, body_type = t.body_type, brake_system = t.brake_system";
@@ -578,7 +594,7 @@ class SyncFromPartsDB extends Command
         DB::statement($sql);
     }
 
-    private function importVehicleEngineCode()
+    protected function importVehicleEngineCode()
     {
 
         $this->truncateTable('vehicle_tmp');
@@ -615,7 +631,7 @@ class SyncFromPartsDB extends Command
         $this->truncateTable('vehicle_tmp');
     }
 
-    private function insertOrUpdateVehiclesEngineCode()
+    protected function insertOrUpdateVehiclesEngineCode()
     {
 
         $sql = "INSERT INTO vehicles (id, engine_code) SELECT t.id, t.engine_code FROM vehicle_tmp t ON DUPLICATE KEY UPDATE engine_code = t.engine_code";
@@ -623,7 +639,7 @@ class SyncFromPartsDB extends Command
         DB::statement($sql);
     }
 
-    private function importProductVehicleMapping()
+    protected function importProductVehicleMapping()
     {
         $db_products_nr = Product::selectRaw(DB::raw('CONCAT(product_nr, "_", brand_id) as product_brand, id'))->pluck('product_brand', 'id')->toArray();
         $db_vehicles = Vehicle::all()->pluck('id', 'id')->toArray();
@@ -668,7 +684,7 @@ class SyncFromPartsDB extends Command
     }
 
     // Done by min
-    private function importProductImageMapping()
+    protected function importProductImageMapping()
     {
 
         $product_image_array = [];
@@ -727,7 +743,7 @@ class SyncFromPartsDB extends Command
         }
     }
 
-    private function importCEDProductCriteria()
+    protected function importCEDProductCriteria()
     {
 
         $brands = Brand::all()->pluck('id')->toArray();
@@ -758,7 +774,7 @@ class SyncFromPartsDB extends Command
         }
     }
 
-    private function importPorductCompanyWebStatus()
+    protected function importPorductCompanyWebStatus()
     {
         $this->createProductCompanyWebStatusTempTable();
         $db_brands = Brand::all()->pluck('id')->toArray();
@@ -788,7 +804,7 @@ class SyncFromPartsDB extends Command
         $this->dropTable('porduct_company_web_statuses_tmp');
     }
 
-    private function createProductCompanyWebStatusTempTable()
+    protected function createProductCompanyWebStatusTempTable()
     {
         $sql1 = "DROP TABLE IF EXISTS `porduct_company_web_statuses_tmp`;";
         $sql2 = "CREATE TABLE `porduct_company_web_statuses_tmp` (
@@ -802,7 +818,7 @@ class SyncFromPartsDB extends Command
         DB::statement($sql2);
     }
 
-    private function insertOrUpdateProductCompanyWebStatus()
+    protected function insertOrUpdateProductCompanyWebStatus()
     {
 
         $sql = "INSERT INTO porduct_company_web_statuses (product_nr, company_sku, company_web_status ) SELECT t.product_nr, t.company_sku, t.company_web_status FROM porduct_company_web_statuses_tmp t ON DUPLICATE KEY UPDATE company_web_status = t.company_web_status";
