@@ -64,19 +64,19 @@ class ProductController extends BaseController
         try {
             $paginate = $request->input('paginate', true);
 
-            $validator = Validator::make($request->all(), [
-                "brand_id" => "integer|exists:brands,id",
-                "category_id" => "integer|exists:categories,id",
-                "products" => "array",
-                "products.*" => "integer|exists:products,id",
-                "paginate" => "boolean",
-                "sort_column" => "string",
-                "sort_order" => "string|in:ASC,DESC,asc,desc"
-            ]);
+            // $validator = Validator::make($request->all(), [
+            //     "brand_id" => "integer|exists:brands,id",
+            //     "category_id" => "integer|exists:categories,id",
+            //     "products" => "array",
+            //     "products.*" => "integer|exists:products,id",
+            //     "paginate" => "boolean",
+            //     "sort_column" => "string",
+            //     "sort_order" => "string|in:ASC,DESC,asc,desc"
+            // ]);
 
-            if ($validator->fails()) {
-                return $this->sendError('Invalid input', $validator->errors()->all(), 401);
-            }
+            // if ($validator->fails()) {
+            //     return $this->sendError('Invalid input', $validator->errors()->all(), 401);
+            // }
 
             $products = $this->productsrepository->getProducts($request->all(), $paginate, $request->page, $request->per_page);
 

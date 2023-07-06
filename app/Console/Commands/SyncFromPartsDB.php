@@ -84,7 +84,7 @@ class SyncFromPartsDB extends Command
 
         //Get CED categories (Complete)
         echo "Start : Import categories \n";
-        // $this->importCategories();
+        $this->importCategories();
         echo "End : Import categories \n\n";
         $import_script->categories = 1;
         $import_script->save();

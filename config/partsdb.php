@@ -23,6 +23,7 @@ return [
     ],
     'makes-models' => 'Vehicle/MakeModels',
     'vehicle' => 'Vehicle/All',
+    // 'search_vehicle' => ''
     'product-by-vehicle-id' => 'Fitment/ProductsLinkedToVehicleID',
     'ced-category-by-brandid-productnr' => 'CED/CEDProductCategories',
     'corresponding-part-number' => 'CED/CEDLinkedProducts',
