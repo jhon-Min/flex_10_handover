@@ -208,7 +208,7 @@ class SyncFromPartsDB extends Command
         }
     }
 
-    public function importProducts()
+    public function importTestProducts()
     {
 
         // $this->createProductsTempTable();
@@ -229,7 +229,6 @@ class SyncFromPartsDB extends Command
                 $product_lists = [];
 
                 foreach ($products as $product) {
-                    echo "loop a product \n";
                     Log::info("Loop a product");
                     //fetch product categories
                     $ced_product_categories =  $this->partsdbapirepository->getCEDProductCategories($product->ProductNr, $product->BrandID);
@@ -302,9 +301,6 @@ class SyncFromPartsDB extends Command
                     //     $products_array = [];
                     //     $product_nr_sku_category = [];
                     // }
-
-                    echo "One time product loop complete \n \n";
-                    Log::info("One time product loop complete");
                 }
                 $PageNum++;
             }
@@ -318,6 +314,108 @@ class SyncFromPartsDB extends Command
             echo "Add products array to product table";
             Log::info("Add record to product table");
         }
+    }
+
+    public function importProducts()
+    {
+        $db_brands = Brand::all()->pluck('id')->toArray();
+
+        $products_array = [];
+        $product_nr_sku_category = [];
+
+        foreach ($db_brands as $brand_id) {
+
+            $PageNum = 1;
+            $products = $this->partsdbapirepository->getAllProducts($brand_id);
+            echo "Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products) . "\n";
+            Log::info("Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products));
+
+            foreach ($products as $product) {
+                Log::info("Loop a product");
+
+                //fetch product categories
+                $ced_product_categories =  $this->partsdbapirepository->getCEDProductCategories($product->ProductNr, $product->BrandID);
+
+                Log::info("Get CED Product Cate");
+
+                if (count($ced_product_categories) > 0) {
+
+                    foreach ($ced_product_categories as $ced_product_category) {
+                        Log::info("Start Loop CED Product Cate");
+                        //fetch product linked parts
+                        $corresponding_numbers = $this->partsdbapirepository->getProductCorrespondingPartNmuber($product->BrandID, $product->ProductNr, $ced_product_category->CompanySKU);
+
+                        Log::info("Get Part Number");
+
+                        $cross_reference_numbers = $associated_part_numbers = [];
+                        if (count($corresponding_numbers) > 0) {
+                            foreach ($corresponding_numbers as $corresponding_number) {
+                                if ($corresponding_number->LinkType == 'Associated Parts') {
+                                    $associated_part_numbers[] = $corresponding_number->LinkProductNr;
+                                } else if ($corresponding_number->LinkType == 'Cross Reference') {
+                                    $cross_reference_numbers[] = $corresponding_number->LinkProductNr;
+                                }
+                            }
+                        }
+
+                        //Fetch product attributes
+                        $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
+
+                        $product_details = [
+                            'brand_id' => $product->BrandID,
+                            'product_nr' => $product->ProductNr,
+                            'name' => $product->StandardDescription,
+                            'description' => $product->StandardDescription,
+                            'cross_reference_numbers' => implode(',', $cross_reference_numbers),
+                            'associated_part_numbers' => implode(',', $associated_part_numbers),
+                            'company_sku' => $ced_product_category->CompanySKU,
+                            'standard_description_id' => $product->StandardDescriptionID,
+                            'last_updated' => $this->last_updated
+                        ];
+
+                        $product_nr_sku_category[$product->ProductNr . "_" . $ced_product_category->CompanySKU] = $ced_product_category->CategoryID;
+                        $products_array[] = array_merge($product_details, $product_critearea);
+                    }
+                } else {
+                    //if category mapping not found
+                    //Fetch product attributes
+                    $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
+
+                    // Log::info("Get Product Cretia");
+
+                    $product_details = [
+                        'brand_id' => $product->BrandID,
+                        'product_nr' => $product->ProductNr,
+                        'name' => $product->StandardDescription,
+                        'description' => $product->StandardDescription,
+                        'cross_reference_numbers' => '',
+                        'associated_part_numbers' => '',
+                        'company_sku' => '',
+                        'standard_description_id' => $product->StandardDescriptionID,
+                        'last_updated' => $this->last_updated
+                    ];
+
+                    $products_array[] = array_merge($product_details, $product_critearea);
+                }
+
+                if (count($products_array) >= 1000) {
+                    echo "Add products array to product table \n \n";
+                    $this->process($products_array);
+                    $this->processProductCategoryMapping($product_nr_sku_category);
+                    $products_array = [];
+                    $product_nr_sku_category = [];
+                }
+            }
+        }
+
+        // if (count($products_array) > 0) {
+        //     $this->process($products_array);
+        //     $this->processProductCategoryMapping($product_nr_sku_category);
+        //     $products_array = [];
+        //     $product_nr_sku_category = [];
+        //     echo "Add products array to product table";
+        //     Log::info("Add record to product table");
+        // }
     }
 
     protected function deleteProducts()
