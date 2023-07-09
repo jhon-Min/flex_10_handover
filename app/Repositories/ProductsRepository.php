@@ -48,179 +48,11 @@ class ProductsRepository extends BaseRepository
         return $vehicles;
     }
 
-    public function fetchProducts()
-    {
-        $db_brands = Brand::all()->pluck('id')->toArray();
-
-        $products_array = [];
-        $ced_array = [];
-        $product_nr_sku_category = [];
-
-        foreach ($db_brands as $brand_id) {
-            $products_lists = $this->partsdbapirepository->getAllProducts($brand_id);
-
-            foreach ($products_lists as $list) {
-                $ced_product_categories =  $this->partsdbapirepository->getCEDProductCategories($list->ProductNr, $list->BrandID);
-                if (count($ced_product_categories) > 0) {
-
-                    foreach ($ced_product_categories as $ced_product_category) {
-
-                        //fetch product linked parts
-                        $corresponding_numbers = $this->partsdbapirepository->getProductCorrespondingPartNmuber($list->BrandID, $list->ProductNr, $ced_product_category->CompanySKU);
-
-                        $cross_reference_numbers = $associated_part_numbers = [];
-                        if (count($corresponding_numbers) > 0) {
-                            foreach ($corresponding_numbers as $corresponding_number) {
-                                if ($corresponding_number->LinkType == 'Associated Parts') {
-                                    $associated_part_numbers[] = $corresponding_number->LinkProductNr;
-                                } else if ($corresponding_number->LinkType == 'Cross Reference') {
-                                    $cross_reference_numbers[] = $corresponding_number->LinkProductNr;
-                                }
-                            }
-                        }
-
-                        // //Fetch product attributes
-                        // $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
-
-                        $product_details = [
-                            'brand_id' => $list->BrandID,
-                            'product_nr' => $list->ProductNr,
-                            'name' => $list->StandardDescription,
-                            'description' => $list->StandardDescription,
-                            'cross_reference_numbers' => implode(',', $cross_reference_numbers),
-                            'associated_part_numbers' => implode(',', $associated_part_numbers),
-                            'company_sku' => $ced_product_category->CompanySKU,
-                            'standard_description_id' => $list->StandardDescriptionID,
-                            'last_updated' => $this->last_updated
-                        ];
-
-                        $product_nr_sku_category[$product->ProductNr . "_" . $ced_product_category->CompanySKU] = $ced_product_category->CategoryID;
-                        $products_array[] = array_merge($product_details, $product_critearea);
-                    }
-                } else {
-                    //if category mapping not found
-                    //Fetch product attributes
-                    $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
-
-                    // Log::info("Get Product Cretia");
-
-                    $product_details = [
-                        'brand_id' => $list->BrandID,
-                        'product_nr' => $list->ProductNr,
-                        'name' => $product->StandardDescription,
-                        'description' => $product->StandardDescription,
-                        'cross_reference_numbers' => '',
-                        'associated_part_numbers' => '',
-                        'company_sku' => '',
-                        'standard_description_id' => $product->StandardDescriptionID,
-                        'last_updated' => $this->last_updated
-                    ];
-
-                    $products_array[] = array_merge($product_details, $product_critearea);
-                }
-            }
-        }
-
-        return $ced_array;
-    }
 
     public function getProducts($filters = array(), $paginate = FALSE, $page = 1, $per_page = 50)
     {
-        $repository = new PartsDBAPIRepository();
-        $repository->login();
-        ini_set('max_execution_time', '-1');
-        ini_set('memory_limit', '-1');
-
-        $expirationTime = 1800;
-        $brandKeys = Redis::keys('brand:*');
-        $brands_arr = [];
-
-        if ($brandKeys) {
-            foreach ($brandKeys as $value) {
-                $data = Redis::get($value);
-                $brands_arr[] = json_decode($data);
-            }
-        } else {
-            $api_brands = $repository->getAllBrands();
-            foreach ($api_brands as $brand) {
-                $brand_data = [
-                    'id' => $brand->ID,
-                    'name' => $brand->BrandName,
-                    'logo' => $brand->ImagesLocation . $brand->LogoFileName,
-                ];
-                $key = 'brand:' . $brand->ID;
-                $value = json_encode($brand_data);
-                // $value = serialize($brand_data);
-                Redis::set($key, $value);
-                Redis::expire($key, $expirationTime);
-            }
-            foreach (Redis::keys('brand:*') as $value) {
-                $data = Redis::get($value);
-                $brands_arr[] = json_decode($data);
-            }
-        }
-
-        $brand_collection = collect($brands_arr);
-        $brands_db = $brand_collection->pluck('id');
-
-        $cateKeys = Redis::keys('category:*');
-        $cate_arr = [];
-        if ($cateKeys) {
-            foreach ($cateKeys as $value) {
-                $data = Redis::get($value);
-                $cate_arr[] = json_decode($data);
-            }
-        } else {
-            $api_categories = $this->partsdbapirepository->getAllCategories();
-            foreach ($api_categories as $category) {
-                $cate_data = [
-                    'id' => $category->CategoryID,
-                    'name' => $category->CategoryName,
-                    'parent_id' => $category->CategoryParentID ?? 0,
-                    'description' => $category->CategoryDescription,
-                    'icon' => $category->CategoryIcon,
-                    'image' => $category->CategoryImage,
-                ];
-                $key = 'category:' . $category->CategoryID;
-                $value = json_encode($cate_data);
-                Redis::set($key, $value);
-                Redis::expire($key, $expirationTime);
-            }
-            foreach (Redis::keys('category:*') as $value) {
-                $data = Redis::get($value);
-                $cate_arr[] = json_decode($data);
-            }
-        }
-
-        $productKeys = Redis::keys('product:*');
-        $product_arr = [];
-        if ($productKeys) {
-            foreach ($productKeys as $value) {
-                $data = Redis::get($value);
-                $product_arr[] = json_decode($data);
-            }
-        } else {
-            foreach ($brands_db as $brand_id) {
-                $api_products = $this->partsdbapirepository->getAllProducts($brand_id);
-                foreach ($api_products as $value) {
-                    // $product_arr[] = $value;
-                    $key = 'product:' . $value->ProductNr;
-                    $value = json_encode($value);
-                    Redis::set($key, $value);
-                    Redis::expire($key, $expirationTime);
-                }
-
-                foreach (Redis::keys('product:*') as $value) {
-                    $data = Redis::get($value);
-                    $product_arr[] = json_decode($data);
-                }
-            }
-        }
-
-        $products = $product_arr;
-
-        // $products = Product::with(['brand', 'vehicles', 'vehicles.make', 'vehicles.model', 'images', 'categories', 'criteria']);
-        // $products->CompanyWebStatus();
+        $products = Product::with(['brand', 'vehicles', 'vehicles.make', 'vehicles.model', 'images', 'categories', 'criteria']);
+        $products->CompanyWebStatus();
 
 
         $combined_search = false;
@@ -259,11 +91,11 @@ class ProductsRepository extends BaseRepository
             $vehicle_ids_array = $vehicle_ids_vin;
         }
 
-        // if ($combined_search) {
-        //     $products->whereHas('vehicles', function ($query) use ($vehicle_ids_array) {
-        //         $query->whereIn('vehicles.id', $vehicle_ids_array);
-        //     });
-        // }
+        if ($combined_search) {
+            $products->whereHas('vehicles', function ($query) use ($vehicle_ids_array) {
+                $query->whereIn('vehicles.id', $vehicle_ids_array);
+            });
+        }
 
         // Filter with brand id
         if (isset($filters['brand_id'])) {
@@ -362,47 +194,47 @@ class ProductsRepository extends BaseRepository
             $sort_order = $filters['sort_order'];
         }
 
-        // $products->orderBy($sort_column, $sort_order);
+        $products->orderBy($sort_column, $sort_order);
 
 
         // return $shirish;
 
-        // if (isset($filters['count'])) {
-        //     if ($count_with_join) {
-        //         return $products->get()->count();
-        //     } else {
-        //         return $products->count();
-        //     }
-        // } elseif ($paginate) {
-        //     $products = $products->select('products.*')->paginate($per_page);
+        if (isset($filters['count'])) {
+            if ($count_with_join) {
+                return $products->get()->count();
+            } else {
+                return $products->count();
+            }
+        } elseif ($paginate) {
+            $products = $products->select('products.*')->paginate($per_page);
 
-        //     // return $products = $products->select('products.*')->paginate($per_page);
-        // } else {
-        //     $products = $products->select('products.*')->get();
-        //     // return $products = $products->select('products.*')->get();
-        // }
+            // return $products = $products->select('products.*')->paginate($per_page);
+        } else {
+            $products = $products->select('products.*')->get();
+            // return $products = $products->select('products.*')->get();
+        }
 
 
         $qty_with_location = array();
 
         $flag_no_stock = 0;
 
-        // foreach ($products as &$prod) {
-        //     $branchWiseQty = ProductQuantity::where('product_id', $prod->id)->get();
-        //     $branchWiseQtyForPush = array();
-        //     foreach ($branchWiseQty as &$branchQty) {
-        //         $branch = Branch::where('id', $branchQty->branch_id)->first();
-        //         $branchQty['branch'] = $branch;
-        //         array_push($branchWiseQtyForPush, $branchQty);
-        //     }
-        //     $prod['qty_with_location'] = $branchWiseQtyForPush;
+        foreach ($products as &$prod) {
+            $branchWiseQty = ProductQuantity::where('product_id', $prod->id)->get();
+            $branchWiseQtyForPush = array();
+            foreach ($branchWiseQty as &$branchQty) {
+                $branch = Branch::where('id', $branchQty->branch_id)->first();
+                $branchQty['branch'] = $branch;
+                array_push($branchWiseQtyForPush, $branchQty);
+            }
+            $prod['qty_with_location'] = $branchWiseQtyForPush;
 
-        //     if ($prod->qty > 0) {
-        //         $flag_no_stock = 1;
-        //     }
-        //     array_push($qty_with_location, $prod);
-        // }
-        // $products->data = $qty_with_location;
+            if ($prod->qty > 0) {
+                $flag_no_stock = 1;
+            }
+            array_push($qty_with_location, $prod);
+        }
+        $products->data = $qty_with_location;
 
         // Add search history data.
         $no_stock_prducts = ProductQuantity::where('qty', 0)->get();

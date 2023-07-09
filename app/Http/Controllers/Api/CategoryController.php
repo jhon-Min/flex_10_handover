@@ -8,16 +8,14 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BaseController;
 use App\Repositories\ProductsRepository;
-use App\Repositories\PartsDBAPIRepository;
 
 class CategoryController extends BaseController
 {
-    public $productsRepository, $partsdbapirepository;
+    public $productsRepository;
 
-    public function __construct(ProductsRepository $productsRepository, PartsDBAPIRepository $partsdbapirepository)
+    public function __construct(ProductsRepository $productsRepository)
     {
         $this->productsRepository = $productsRepository;
-        $this->partsdbapirepository = $partsdbapirepository;
     }
 
     public function positions(Request $request)
@@ -70,23 +68,6 @@ class CategoryController extends BaseController
     {
         try {
             $message = "All Categories";
-            $this->partsdbapirepository->login();
-            $category_api = $this->partsdbapirepository->getAllCategories();
-
-            foreach ($category_api as $category) {
-
-                $category_data = Category::firstOrCreate([
-                    'id' => $category->CategoryID,
-                    'name' => $category->CategoryName
-                ]);
-
-                $category_data->parent_id = $category->CategoryParentID ?? 0;
-                $category_data->description = $category->CategoryDescription;
-                $category_data->icon = $category->CategoryIcon;
-                $category_data->image = $category->CategoryImage;
-                $category_data->save();
-            }
-
             $categories = Category::all();
 
             if (!empty($request->all())) {
@@ -107,7 +88,6 @@ class CategoryController extends BaseController
 
             return $this->sendResponse($categories, $message);
         } catch (\Exception $e) {
-
             return $this->sendError($e->getMessage(), [], 401);
         }
     }

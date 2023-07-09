@@ -55,7 +55,6 @@ class SearchController extends BaseController
             $vehicles = $this->productsRepository->getVehicles($filters, false);
             return $this->sendResponse(['count' => count($products), 'vehicles' => $vehicles], "Products Count");
         } catch (\Exception $e) {
-            return $e;
             return $this->sendError($e->getMessage(), [], 401);
         }
     }
@@ -142,19 +141,6 @@ class SearchController extends BaseController
     public function makes()
     {
         try {
-            $this->partsdbapirepository->login();
-            $make_api = $this->partsdbapirepository->getAllMakes();
-
-            foreach ($make_api as $make) {
-                if (is_object($make) && isset($make->ID)) {
-                    Make::updateOrCreate(
-                        ['id' => $make->ID],
-                        ['name' => $make->Make]
-                    );
-                }
-            }
-
-
             $common_makes = Make::where('is_common', '1')->orderBy('name', 'ASC')->get();
             $makes = Make::orderBy('name', 'ASC')->get();
 

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-// use JWTAuth;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use Auth;
+use JWTAuth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -16,15 +16,14 @@ class Product extends Model
     ];
     protected function getAuth()
     {
-        // try {
-        //     $token = JWTAuth::getToken();
-        //     $user = JWTAuth::toUser($token);
-        //     $user_id = $user->id;
-        // } catch (\Tymon\JWTAuth\Exceptions\JWTException $th) {
-        //     //throw $th;
-        //     $user_id = 0;
-        // }
-        // return $user_id;
+        try {
+            $token = JWTAuth::getToken();
+            $user = JWTAuth::toUser($token);
+            $user_id = $user->id;
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $th) {
+            $user_id = 0;
+        }
+        return $user_id;
     }
     protected $appends = ['price_nett', 'price_retail'];
     protected $fillable = ['product_nr', 'qty', 'brand_id', 'name', 'description', 'cross_reference_numbers', 'associated_part_numbers', 'company_sku', 'standard_description_id', 'last_updated'];
