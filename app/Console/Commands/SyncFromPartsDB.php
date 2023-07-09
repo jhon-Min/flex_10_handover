@@ -92,13 +92,13 @@ class SyncFromPartsDB extends Command
         //Import Products from the partsdb to local database with make, model, vehicle mapping (Complete)
         echo "Start : Import Products \n";
         Log::info("Start : Import Products");
-        $this->importProducts();
+        // $this->importProducts();
         Log::info("End : Import Products");
         echo "End : Import Products \n\n";
 
         //delete Products from local db which are removed from parts db and not coming in sync
         echo "Start : Delete Products \n";
-        $this->deleteProducts();
+        // $this->deleteProducts();
         echo "End : Delete Products \n\n";
 
         // Get CED Prodct Criteria (Complete)
@@ -401,28 +401,40 @@ class SyncFromPartsDB extends Command
                 if (count($products_array) >= 1000) {
                     echo "Add products array to product table \n \n";
                     $this->process($products_array);
-                    $this->processProductCategoryMapping($product_nr_sku_category);
+                    try {
+                        $this->processProductCategoryMapping($product_nr_sku_category);
+                    } catch (\Throwable $th) {
+                        echo "Product Not Found: \n";
+                        Log::info($th->getMessage());
+                    }
                     $products_array = [];
                     $product_nr_sku_category = [];
                 }
             }
         }
 
-        // if (count($products_array) > 0) {
-        //     $this->process($products_array);
-        //     $this->processProductCategoryMapping($product_nr_sku_category);
-        //     $products_array = [];
-        //     $product_nr_sku_category = [];
-        //     echo "Add products array to product table";
-        //     Log::info("Add record to product table");
-        // }
+        if (count($products_array) > 0) {
+            $this->process($products_array);
+            try {
+                $this->processProductCategoryMapping($product_nr_sku_category);
+            } catch (\Throwable $th) {
+                echo "Product Not Found: \n";
+                Log::info($th->getMessage());
+            }
+            $products_array = [];
+            $product_nr_sku_category = [];
+            echo "Add products array to product table";
+            Log::info("Add record to product table");
+        }
     }
 
+    // Done By Min
     protected function deleteProducts()
     {
         Product::where('last_updated', '<>', $this->last_updated)->delete();
     }
 
+    // Done by Min
     protected function processProductCategoryMapping($product_nr_sku_category)
     {
 
@@ -449,7 +461,7 @@ class SyncFromPartsDB extends Command
         }
     }
 
-    // Done min
+    // Done by Min
     protected function getProductAttributes($brand_id, $product_nr, $standard_description_id)
     {
 
@@ -582,7 +594,6 @@ class SyncFromPartsDB extends Command
 
     protected function truncateTable($table)
     {
-
         $sql = "TRUNCATE TABLE " . $table;
         DB::statement($sql);
     }
@@ -624,8 +635,6 @@ class SyncFromPartsDB extends Command
                 } catch (\Exception $e) {
                     Log::info($vehicle->toArray());
                 }
-
-                //}
 
                 //echo "Vehicles Fetched : " . count($vehicles_array) . "\n";
                 if (count($vehicles_array) >= 1000) {
