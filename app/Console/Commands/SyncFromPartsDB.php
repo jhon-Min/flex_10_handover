@@ -229,13 +229,12 @@ class SyncFromPartsDB extends Command
                 $product_lists = [];
 
                 foreach ($products as $product) {
+                    echo "loop a product \n";
                     Log::info("Loop a product");
                     //fetch product categories
                     $ced_product_categories =  $this->partsdbapirepository->getCEDProductCategories($product->ProductNr, $product->BrandID);
 
                     Log::info("Get CED Product Cate");
-
-
 
                     if (count($ced_product_categories) > 0) {
 
@@ -297,17 +296,14 @@ class SyncFromPartsDB extends Command
                         $products_array[] = array_merge($product_details, $product_critearea);
                     }
 
+                    // if (count($products_array) >= 1000) {
+                    //     $this->process($products_array);
+                    //     $this->processProductCategoryMapping($product_nr_sku_category);
+                    //     $products_array = [];
+                    //     $product_nr_sku_category = [];
+                    // }
 
-                    if (count($products_array) >= 1000) {
-                        $this->process($products_array);
-                        $this->processProductCategoryMapping($product_nr_sku_category);
-                        $products_array = [];
-                        $product_nr_sku_category = [];
-
-                        Log::info("Add 2 record to product temp table");
-                    }
-
-
+                    echo "One time product loop complete \n \n";
                     Log::info("One time product loop complete");
                 }
                 $PageNum++;
@@ -319,6 +315,7 @@ class SyncFromPartsDB extends Command
             $this->processProductCategoryMapping($product_nr_sku_category);
             $products_array = [];
             $product_nr_sku_category = [];
+            echo "Add products array to product table";
             Log::info("Add record to product table");
         }
     }
