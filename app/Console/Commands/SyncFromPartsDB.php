@@ -776,10 +776,9 @@ class SyncFromPartsDB extends Command
             foreach ($product_images as  $product_image) {
                 try {
                     if (isset($product_image->ImagesLocation) && !empty($product_image->ImagesLocation)) {
-
                         $path = $this->PRODUCTS_PATH . $product_image->FileName;
                         $exist_image = Storage::disk('public')->exists($path);
-                        echo "Start Uploading to Disk";
+
                         $ext = $product_image->Extension;
 
                         if ($ext != "PDF") {
@@ -797,6 +796,7 @@ class SyncFromPartsDB extends Command
                                 $stored_images[] = $product_id . "_" . $product_image->FileName;
                             }
                         }
+                        echo " Uploading to Disk \n";
                     }
                 } catch (\Exception $e) {
 
@@ -804,7 +804,7 @@ class SyncFromPartsDB extends Command
                 }
             }
 
-            if (count($product_image_array) >= 10) {
+            if (count($product_image_array) >= 100) {
                 echo "\n Images Imported : " . count($product_image_array) . "\n";
                 ProductImage::insert($product_image_array);
                 $product_image_array = [];
