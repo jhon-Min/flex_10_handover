@@ -817,7 +817,7 @@ class SyncFromPartsDB extends Command
         }
     }
 
-    protected function im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portCEDProductCriteria()
+    protected function importCEDProductCriteria()
     {
 
         $brands = Brand::all()->pluck('id')->toArray();
