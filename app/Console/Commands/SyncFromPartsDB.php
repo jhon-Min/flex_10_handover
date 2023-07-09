@@ -77,22 +77,14 @@ class SyncFromPartsDB extends Command
 
         // Get all brands that available to the customer from parts db and import in local database (Complete)
         echo "Start : Import Brands \n";
-        // $this->importBrands();
+        $this->importBrands();
         echo "End : Import Brands \n\n";
         $import_script->brand = 1;
         $import_script->save();
 
-        //Get CED categories (Complete)
-        echo "Start : Import categories \n";
-        $this->importCategories();
-        echo "End : Import categories \n\n";
-        $import_script->categories = 1;
-        $import_script->save();
-
-
         //Get the list of all Makes and Models from PARts system and import in local database
         echo "Start : Import Makes and Models \n";
-        // $this->importMakeAndModel();
+        $this->importMakeAndModel();
         echo "End : Import Makes and Models \n\n";
         $import_script->make_model = 1;
         $import_script->save();
@@ -164,38 +156,13 @@ class SyncFromPartsDB extends Command
     {
         $brands = $this->partsdbapirepository->getAllBrands();
         foreach ($brands as $brand) {
-            if ($brand->BrandName != "TRW" && $brand->BrandName != "DOGA" && $brand->BrandName !=  "REMSA" && $brand->BrandName !=  "BOSCH") {
-                Brand::firstOrCreate(
-                    [
-                        'id' => $brand->ID,
-                        'name' => $brand->BrandName,
-                        'logo' => $brand->ImagesLocation . $brand->LogoFileName
-                    ]
-                );
-            }
-        }
-    }
-
-    // Done min
-    protected function importCategories()
-    {
-
-        $db_categories = Category::all()->pluck('id')->toArray();
-        $categories = $this->partsdbapirepository->getAllCategories();
-
-        $category_array = [];
-        foreach ($categories as $category) {
-
-            $category_data = Category::firstOrCreate([
-                'id' => $category->CategoryID,
-                'name' => $category->CategoryName
-            ]);
-
-            $category_data->parent_id = $category->CategoryParentID ?? 0;
-            $category_data->description = $category->CategoryDescription;
-            $category_data->icon = $category->CategoryIcon;
-            $category_data->image = $category->CategoryImage;
-            $category_data->save();
+            Brand::firstOrCreate(
+                [
+                    'id' => $brand->ID,
+                    'name' => $brand->BrandName,
+                    'logo' => $brand->ImagesLocation . $brand->LogoFileName
+                ]
+            );
         }
     }
 
@@ -254,9 +221,9 @@ class SyncFromPartsDB extends Command
         foreach ($db_brands as $brand_id) {
 
             $PageNum = 1;
-            while ($products = $this->partsdbapirepository->getProductsSubscribed($brand_id, $PageNum, 2)) {
-                // echo "Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products) . "\n";
-                // Log::info("Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products));
+            while ($products = $this->partsdbapirepository->getProductsSubscribed($brand_id, $PageNum, 10000)) {
+                echo "Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products) . "\n";
+                Log::info("Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products));
 
 
                 $product_lists = [];
@@ -331,14 +298,14 @@ class SyncFromPartsDB extends Command
                     }
 
 
-                    // if (count($products_array) >= 3) {
-                    //     $this->process($products_array, 'products_tmp');
-                    //     $this->processProductCategoryMapping($product_nr_sku_category);
-                    //     $products_array = [];
-                    //     $product_nr_sku_category = [];
+                    if (count($products_array) >= 1000) {
+                        $this->process($products_array);
+                        $this->processProductCategoryMapping($product_nr_sku_category);
+                        $products_array = [];
+                        $product_nr_sku_category = [];
 
-                    //     Log::info("Add 2 record to product temp table");
-                    // }
+                        Log::info("Add 2 record to product temp table");
+                    }
 
 
                     Log::info("One time product loop complete");
@@ -348,7 +315,7 @@ class SyncFromPartsDB extends Command
         }
 
         if (count($products_array) > 0) {
-            $this->process($products_array, 'products');
+            $this->process($products_array);
             $this->processProductCategoryMapping($product_nr_sku_category);
             $products_array = [];
             $product_nr_sku_category = [];
@@ -431,7 +398,7 @@ class SyncFromPartsDB extends Command
         return $critearea;
     }
 
-    protected function process(array $records, $table)
+    protected function process(array $records)
     {
 
         if (count($records) == 0) {
