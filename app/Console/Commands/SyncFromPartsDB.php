@@ -401,7 +401,7 @@ class SyncFromPartsDB extends Command
 
                 if (count($products_array) >= 1000) {
                     echo "Add products array to product table \n \n";
-                    $this->process($products_array);
+                    $this->process($products_array, 'product_tmp');
                     try {
                         $this->processProductCategoryMapping($product_nr_sku_category);
                     } catch (\Throwable $th) {
@@ -415,7 +415,7 @@ class SyncFromPartsDB extends Command
         }
 
         if (count($products_array) > 0) {
-            $this->process($products_array);
+            $this->process($products_array, 'product_tmp');
             try {
                 $this->processProductCategoryMapping($product_nr_sku_category);
             } catch (\Throwable $th) {
@@ -506,46 +506,48 @@ class SyncFromPartsDB extends Command
         return $critearea;
     }
 
-    protected function process(array $records)
+    protected function process(array $records, $table)
     {
 
         if (count($records) == 0) {
             return true;
         }
 
-        foreach ($records as $record) {
-            Log::info($record);
-            if ($product = Product::where('product_nr', $record['product_nr'])->where('brand_id', $record['brand_id'])->first()) {
-                Log::info('exists product');
-                $product->update([
-                    'brand_id' => $record['brand_id'],
-                    'product_nr' => $record['product_nr'],
-                    'name' => $record['name'],
-                    'description' => $record['description'],
-                    'cross_reference_numbers' => $record['cross_reference_numbers'],
-                    'associated_part_numbers' => $record['associated_part_numbers'],
-                    'company_sku' => $record['company_sku'],
-                    'standard_description_id' => $record['standard_description_id'],
-                    'last_updated' => $record['last_updated']
-                ]);
-            } else {
-                Product::create([
-                    'brand_id' => $record['brand_id'],
-                    'product_nr' => $record['product_nr'],
-                    'name' => $record['name'],
-                    'description' => $record['description'],
-                    'cross_reference_numbers' => $record['cross_reference_numbers'],
-                    'associated_part_numbers' => $record['associated_part_numbers'],
-                    'company_sku' => $record['company_sku'],
-                    'standard_description_id' => $record['standard_description_id'],
-                    'last_updated' => $record['last_updated']
-                ]);
+        if ($table == 'product_tmp') {
+            foreach ($records as $record) {
+                Log::info($record);
+                if ($product = Product::where('product_nr', $record['product_nr'])->where('brand_id', $record['brand_id'])->first()) {
+                    Log::info('exists product');
+                    $product->update([
+                        'brand_id' => $record['brand_id'],
+                        'product_nr' => $record['product_nr'],
+                        'name' => $record['name'],
+                        'description' => $record['description'],
+                        'cross_reference_numbers' => $record['cross_reference_numbers'],
+                        'associated_part_numbers' => $record['associated_part_numbers'],
+                        'company_sku' => $record['company_sku'],
+                        'standard_description_id' => $record['standard_description_id'],
+                        'last_updated' => $record['last_updated']
+                    ]);
+                } else {
+                    Product::create([
+                        'brand_id' => $record['brand_id'],
+                        'product_nr' => $record['product_nr'],
+                        'name' => $record['name'],
+                        'description' => $record['description'],
+                        'cross_reference_numbers' => $record['cross_reference_numbers'],
+                        'associated_part_numbers' => $record['associated_part_numbers'],
+                        'company_sku' => $record['company_sku'],
+                        'standard_description_id' => $record['standard_description_id'],
+                        'last_updated' => $record['last_updated']
+                    ]);
+                }
             }
         }
 
-        // if ($table == 'porduct_company_web_statuses_tmp') {
-        //     $this->insertOrUpdateProductCompanyWebStatus();
-        // }
+        if ($table == 'porduct_company_web_statuses_tmp') {
+            $this->insertOrUpdateProductCompanyWebStatus();
+        }
 
         echo "\nProcessed " . count($records) . "\n";
         return true;
