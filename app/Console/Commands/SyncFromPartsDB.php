@@ -729,6 +729,7 @@ class SyncFromPartsDB extends Command
                 $VehicleIDs = array_column($vehicles, "VehicleID");
 
                 foreach ($VehicleIDs as $VehicleID) {
+                    echo "Start loop vehicle: $VehicleID";
 
                     if (!in_array($product_id . "_" . $VehicleID, $product_vehicle) && in_array($VehicleID, $db_vehicles)) {
 
@@ -740,7 +741,7 @@ class SyncFromPartsDB extends Command
                     }
                 }
 
-                if (count($product_vehicle_array) >= 1000) {
+                if (count($product_vehicle_array) >= 10) {
                     ProductVehicle::insert($product_vehicle_array);
                     echo "Vehicles Product Mapping inserted : " . count($product_vehicle_array) . "\n \n";
                     $product_vehicle_array = [];
