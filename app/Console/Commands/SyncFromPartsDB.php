@@ -84,7 +84,7 @@ class SyncFromPartsDB extends Command
 
         //Get the list of all Makes and Models from PARts system and import in local database
         echo "Start : Import Makes and Models \n";
-        $this->importMakeAndModel();
+        // $this->importMakeAndModel();
         echo "End : Import Makes and Models \n\n";
         $import_script->make_model = 1;
         $import_script->save();
@@ -152,17 +152,18 @@ class SyncFromPartsDB extends Command
     }
 
     // Done min
-    protected function importBrands()
+    private function importBrands()
     {
+
+        $db_brands = Brand::all()->pluck('id')->toArray();
         $brands = $this->partsdbapirepository->getAllBrands();
+        $brands_array = [];
         foreach ($brands as $brand) {
-            Brand::firstOrCreate(
-                [
-                    'id' => $brand->ID,
-                    'name' => $brand->BrandName,
-                    'logo' => $brand->ImagesLocation . $brand->LogoFileName
-                ]
-            );
+            if ($brand->BrandName != "TRW" && $brand->BrandName != "DOGA" && $brand->BrandName !=  "REMSA" && $brand->BrandName !=  "BOSCH") {
+                $brand_data = Brand::firstOrCreate(['id' => $brand->ID, 'name' => $brand->BrandName]);
+                $brand_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
+                $brand_data->save();
+            }
         }
     }
 
