@@ -124,7 +124,7 @@ class SyncFromPartsDB extends Command
 
         //Import Product-Vehicle mapping
         echo "Start : Import Product-Vehicle mapping \n";
-        $this->importProductVehicleMapping();
+        // $this->importProductVehicleMapping();
         echo "End : Import Product-Vehicle mapping \n";
         $import_script->product_vehicles = 1;
         $import_script->save();
@@ -729,7 +729,7 @@ class SyncFromPartsDB extends Command
                 $VehicleIDs = array_column($vehicles, "VehicleID");
 
                 foreach ($VehicleIDs as $VehicleID) {
-                    echo "Start loop vehicle: $VehicleID";
+                    echo "Start loop vehicle: $VehicleID \n";
 
                     if (!in_array($product_id . "_" . $VehicleID, $product_vehicle) && in_array($VehicleID, $db_vehicles)) {
 
@@ -741,7 +741,7 @@ class SyncFromPartsDB extends Command
                     }
                 }
 
-                if (count($product_vehicle_array) >= 10) {
+                if (count($product_vehicle_array) >= 1000) {
                     ProductVehicle::insert($product_vehicle_array);
                     echo "Vehicles Product Mapping inserted : " . count($product_vehicle_array) . "\n \n";
                     $product_vehicle_array = [];
