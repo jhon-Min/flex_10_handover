@@ -103,13 +103,13 @@ class SyncFromPartsDB extends Command
 
         // Get CED Prodct Criteria (Complete)
         echo "Start : Import CED Product Criteria \n";
-        $this->importCEDProductCriteria();
+        // $this->importCEDProductCriteria();
         echo "End : Import CED Product Criteria \n\n";
         $import_script->product_criteria = 1;
         $import_script->save();
 
         echo "Start : Import CED Product Company Web Status \n";
-        $this->importPorductCompanyWebStatus();
+        // $this->importPorductCompanyWebStatus();
         echo "End : Import CED Product Company Web Status \n\n";
         $import_script->products = 1;
         $import_script->save();
@@ -117,7 +117,7 @@ class SyncFromPartsDB extends Command
 
         //Import Vehicles from the partsdb to local database
         echo "Start : Import Vehicles \n";
-        $this->importVehicles();
+        // $this->importVehicles();
         echo "End : Import Vehicles \n";
         $import_script->vehicle = 1;
         $import_script->save();
@@ -640,7 +640,7 @@ class SyncFromPartsDB extends Command
                 }
 
                 //echo "Vehicles Fetched : " . count($vehicles_array) . "\n";
-                if (count($vehicles_array) >= 10) {
+                if (count($vehicles_array) >= 100) {
                     VehicleTemp::insert($vehicles_array);
                     echo "Vehicles Inserted : " . count($vehicles_array) . "\n\n";
                     $vehicles_array = [];
