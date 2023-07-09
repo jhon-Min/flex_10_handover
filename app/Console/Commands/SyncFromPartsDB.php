@@ -640,7 +640,7 @@ class SyncFromPartsDB extends Command
                 }
 
                 //echo "Vehicles Fetched : " . count($vehicles_array) . "\n";
-                if (count($vehicles_array) >= 1000) {
+                if (count($vehicles_array) >= 10) {
                     VehicleTemp::insert($vehicles_array);
                     echo "Vehicles Inserted : " . count($vehicles_array) . "\n\n";
                     $vehicles_array = [];
@@ -817,7 +817,7 @@ class SyncFromPartsDB extends Command
         }
     }
 
-    protected function importCEDProductCriteria()
+    protected function im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portCEDProductCriteria()
     {
 
         $brands = Brand::all()->pluck('id')->toArray();
