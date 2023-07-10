@@ -45,6 +45,8 @@ class SyncProductImage extends Command
     {
         ini_set('memory_limit', '-1');
         $import_script = ImportScriptHistory::create(['start' => Carbon::now()]);
+        $this->partsdbapirepository->login();
+        $import_script->login = 1;
 
         echo "Start : Import Product-image mapping \n" . Carbon::now() . "\n";
         $this->importProductImageMapping();
