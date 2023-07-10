@@ -485,30 +485,34 @@ class SyncFromPartsDB extends Command
 
         $product_critearea =  $this->partsdbapirepository->getProductCriteria($brand_id, $product_nr, $standard_description_id);
 
-        if (count($product_critearea) > 0) {
+        try {
+            if (count($product_critearea) > 0) {
 
-            foreach ($product_critearea as $criteara) {
+                foreach ($product_critearea as $criteara) {
 
-                $critearea['product_nr'] = $product_nr;
-                $critearea['brand_id'] = $brand_id;
+                    $critearea['product_nr'] = $product_nr;
+                    $critearea['brand_id'] = $brand_id;
 
-                if (isset($criteara->Criteria) && !empty($criteara->Criteria)) {
-                    if ($criteara->Criteria == 'Brake System' || $criteara->Criteria == 'Brake Type') {
-                        $critearea['brake_system'] = $criteara->Value;
-                    } elseif ($criteara->Criteria == 'Length [mm]') {
-                        $critearea['length'] = $criteara->Value;
-                    } elseif ($criteara->Criteria == 'Fitting Position') {
-                        $critearea['fitting_position'] = $criteara->Value;
-                    } elseif ($criteara->Criteria == 'Height [mm]') {
-                        $critearea['height'] = $criteara->Value;
-                    } elseif ($criteara->Criteria == 'Weight [kg]') {
-                        $critearea['weight'] = $criteara->Value;
-                    } elseif ($criteara->Criteria == 'Thickness' || $criteara->Criteria == 'Thickness [mm]') {
-                        $critearea['thickness'] = $criteara->Value;
-                    } else {
+                    if (isset($criteara->Criteria) && !empty($criteara->Criteria)) {
+                        if ($criteara->Criteria == 'Brake System' || $criteara->Criteria == 'Brake Type') {
+                            $critearea['brake_system'] = $criteara->Value;
+                        } elseif ($criteara->Criteria == 'Length [mm]') {
+                            $critearea['length'] = $criteara->Value;
+                        } elseif ($criteara->Criteria == 'Fitting Position') {
+                            $critearea['fitting_position'] = $criteara->Value;
+                        } elseif ($criteara->Criteria == 'Height [mm]') {
+                            $critearea['height'] = $criteara->Value;
+                        } elseif ($criteara->Criteria == 'Weight [kg]') {
+                            $critearea['weight'] = $criteara->Value;
+                        } elseif ($criteara->Criteria == 'Thickness' || $criteara->Criteria == 'Thickness [mm]') {
+                            $critearea['thickness'] = $criteara->Value;
+                        } else {
+                        }
                     }
                 }
             }
+        } catch (\Throwable $th) {
+            echo "Product Attribute Error: " . $th->getMessage() . "\n";
         }
 
         return $critearea;
