@@ -46,6 +46,9 @@ class SyncProductImage extends Command
         ini_set('memory_limit', '-1');
         $import_script = ImportScriptHistory::create(['start' => Carbon::now()]);
 
+        echo "Start : Import Product-image mapping \n" . Carbon::now() . "\n";
+        $this->importProductImageMapping();
+        echo "End : Import Product-image mapping \n" . Carbon::now() . "\n";
         $import_script->product_images = 1;
         $import_script->end = Carbon::now();
         $import_script->duration = $import_script->end->diffForHumans($import_script->start);
