@@ -2,8 +2,7 @@
 
 namespace App\Models;
 
-use Auth;
-use JWTAuth;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 

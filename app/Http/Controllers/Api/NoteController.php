@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use Auth;
-use App\Note;
-use Validator;
-use App\Product;
+use App\Models\Note;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\BaseController;
+use Illuminate\Support\Facades\Validator;
+
 
 class NoteController extends BaseController
 {
@@ -20,13 +19,13 @@ class NoteController extends BaseController
      * @bodyParam product Integer required Product ID ( Table : "products" )
      * @bodyParam description String required Note (description)
      * @bodyParam user_name String required User name
-     *  
+     *
      */
     public function store(Request $request)
     {
         try {
 
-            $validator = \Validator::make($request->all(), [
+            $validator = Validator::make($request->all(), [
                 "product" => "required|integer|exists:products,id",
                 "description" => "required|string|min:2",
             ]);
@@ -42,14 +41,13 @@ class NoteController extends BaseController
             ];
 
             $save_note = Note::create($note_array);
-            
-            if($save_note->id) {
+
+            if ($save_note->id) {
                 $note =  Note::with(['user'])->find($save_note->id);
                 return $this->sendResponse($note, "Note saved.");
             } else {
                 return $this->sendError("Note save Failed", [], 401);
             }
-             
         } catch (\Exception $e) {
 
             return $this->sendError($e->getMessage(), [], 401);

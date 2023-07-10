@@ -13,7 +13,6 @@ use App\Models\Brand;
 use App\Models\Models;
 use App\Models\Vehicle;
 use App\Models\Product;
-use App\Models\Category;
 use Carbon\Carbon;
 use App\Models\VehicleTemp;
 use App\Models\ProductImage;
@@ -344,7 +343,12 @@ class SyncFromPartsDB extends Command
                     foreach ($ced_product_categories as $ced_product_category) {
                         Log::info("Start Loop CED Product Cate");
                         //fetch product linked parts
-                        $corresponding_numbers = $this->partsdbapirepository->getProductCorrespondingPartNmuber($product->BrandID, $product->ProductNr, $ced_product_category->CompanySKU);
+                        try {
+                            $corresponding_numbers = $this->partsdbapirepository->getProductCorrespondingPartNmuber($product->BrandID, $product->ProductNr, $ced_product_category->CompanySKU);
+                        } catch (\Throwable $th) {
+                            echo "Product Corresponding Not Found: \n";
+                            Log::info($th->getMessage());
+                        }
 
                         Log::info("Get Part Number");
 
@@ -380,8 +384,12 @@ class SyncFromPartsDB extends Command
                 } else {
                     //if category mapping not found
                     //Fetch product attributes
-                    $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
-
+                    try {
+                        $product_critearea =  $this->getProductAttributes($product->BrandID, $product->ProductNr, $product->StandardDescriptionID);
+                    } catch (\Throwable $th) {
+                        echo "Product Attribute Not Found: \n";
+                        Log::info($th->getMessage());
+                    }
                     // Log::info("Get Product Cretia");
 
                     $product_details = [
