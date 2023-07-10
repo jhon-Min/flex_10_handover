@@ -331,17 +331,17 @@ class SyncFromPartsDB extends Command
             Log::info("Brand ID : " . $brand_id . " > PageNum : " . $PageNum . " > Products Fetched : " . count($products));
 
             foreach ($products as $product) {
-                Log::info("Loop a product");
+                // Log::info("Loop a product");
 
                 //fetch product categories
                 $ced_product_categories =  $this->partsdbapirepository->getCEDProductCategories($product->ProductNr, $product->BrandID);
 
-                Log::info("Get CED Product Cate");
+                // Log::info("Get CED Product Cate");
 
                 if (count($ced_product_categories) > 0) {
 
                     foreach ($ced_product_categories as $ced_product_category) {
-                        Log::info("Start Loop CED Product Cate");
+                        // Log::info("Start Loop CED Product Cate");
                         //fetch product linked parts
                         try {
                             $corresponding_numbers = $this->partsdbapirepository->getProductCorrespondingPartNmuber($product->BrandID, $product->ProductNr, $ced_product_category->CompanySKU);
@@ -350,7 +350,7 @@ class SyncFromPartsDB extends Command
                             Log::info($th->getMessage());
                         }
 
-                        Log::info("Get Part Number");
+                        // Log::info("Get Part Number");
 
                         $cross_reference_numbers = $associated_part_numbers = [];
                         if (count($corresponding_numbers) > 0) {
@@ -529,7 +529,7 @@ class SyncFromPartsDB extends Command
             foreach ($records as $record) {
                 Log::info($record);
                 if ($product = Product::where('product_nr', $record['product_nr'])->where('company_sku', $record['company_sku'])->first()) {
-                    Log::info('exists product');
+                    Log::info($product);
                     $product->update([
                         'brand_id' => $record['brand_id'],
                         'product_nr' => $record['product_nr'],
