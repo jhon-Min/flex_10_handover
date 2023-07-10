@@ -746,7 +746,11 @@ class SyncFromPartsDB extends Command
                     //throw $th;
                 }
                 // echo "Vehicles Product Fetched : " . count($vehicles) . "\n";
-                $VehicleIDs = array_column($vehicles, "VehicleID");
+                try {
+                    $VehicleIDs = array_column($vehicles, "VehicleID");
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
 
                 try {
                     foreach ($VehicleIDs as $VehicleID) {
@@ -765,7 +769,7 @@ class SyncFromPartsDB extends Command
                     //throw $th;
                 }
 
-                if (count($product_vehicle_array) >= 1000) {
+                if (count($product_vehicle_array) >= 100) {
                     try {
                         ProductVehicle::insert($product_vehicle_array);
                     } catch (\Throwable $th) {
@@ -775,7 +779,6 @@ class SyncFromPartsDB extends Command
                     $product_vehicle_array = [];
                 }
             } catch (\Exception $e) {
-
                 echo $e->getMessage() . "\n";
             }
         }
