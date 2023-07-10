@@ -318,7 +318,6 @@ class SyncFromPartsDB extends Command
 
     public function importProducts()
     {
-        $this->createProductsTempTable();
         $db_brands = Brand::all()->pluck('id')->toArray();
 
         $products_array = [];
@@ -436,7 +435,6 @@ class SyncFromPartsDB extends Command
             echo "Add products array to product table";
             Log::info("Add record to product table");
         }
-        $this->dropTable('products_tmp');
     }
 
     // Done By Min
@@ -527,31 +525,36 @@ class SyncFromPartsDB extends Command
             return true;
         }
 
-        $first = reset($records);
-        $columns = implode(
-            ',',
-            array_map(function ($value) {
-                return "`$value`";
-            }, array_keys($first))
-        );
-
-        $values = implode(
-            ',',
-            array_map(function ($record) {
-                return '(' . implode(
-                    ',',
-                    array_map(function ($value) {
-                        return '"' . str_replace('"', '""', $value) . '"';
-                    }, $record)
-                ) . ')';
-            }, $records)
-        );
-
-        $sql = "insert into $table({$columns}) values {$values}";
-        DB::statement($sql);
-
-        if ($table == 'products_tmp') {
-            $this->insertOrUpdateProducts();
+        if ($table == 'product_tmp') {
+            foreach ($records as $record) {
+                Log::info($record);
+                if ($product = Product::where('product_nr', $record['product_nr'])->where('company_sku', $record['company_sku'])->first()) {
+                    Log::info('exists product');
+                    $product->update([
+                        'brand_id' => $record['brand_id'],
+                        'product_nr' => $record['product_nr'],
+                        'name' => $record['name'],
+                        'description' => $record['description'],
+                        'cross_reference_numbers' => $record['cross_reference_numbers'],
+                        'associated_part_numbers' => $record['associated_part_numbers'],
+                        'company_sku' => $record['company_sku'],
+                        'standard_description_id' => $record['standard_description_id'],
+                        'last_updated' => $record['last_updated']
+                    ]);
+                } else {
+                    Product::create([
+                        'brand_id' => $record['brand_id'],
+                        'product_nr' => $record['product_nr'],
+                        'name' => $record['name'],
+                        'description' => $record['description'],
+                        'cross_reference_numbers' => $record['cross_reference_numbers'],
+                        'associated_part_numbers' => $record['associated_part_numbers'],
+                        'company_sku' => $record['company_sku'],
+                        'standard_description_id' => $record['standard_description_id'],
+                        'last_updated' => $record['last_updated']
+                    ]);
+                }
+            }
         }
 
         if ($table == 'porduct_company_web_statuses_tmp') {
