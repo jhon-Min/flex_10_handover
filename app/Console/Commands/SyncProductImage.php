@@ -72,6 +72,7 @@ class SyncProductImage extends Command
             $product_images =  $this->partsdbapirepository->getProductsImages($brand_id, $product_nr);
 
             foreach ($product_images as  $product_image) {
+                echo "start upload \n \n";
                 try {
                     if (isset($product_image->ImagesLocation) && !empty($product_image->ImagesLocation)) {
                         $path = $this->PRODUCTS_PATH . $product_image->FileName;

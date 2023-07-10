@@ -743,13 +743,13 @@ class SyncFromPartsDB extends Command
                 try {
                     $vehicles = $this->partsdbapirepository->getVehiclesLinkedToProduct($product_nr, $brand_id);
                 } catch (\Throwable $th) {
-                    //throw $th;
+                    echo $th;
                 }
                 // echo "Vehicles Product Fetched : " . count($vehicles) . "\n";
                 try {
                     $VehicleIDs = array_column($vehicles, "VehicleID");
                 } catch (\Throwable $th) {
-                    //throw $th;
+                    echo $th;
                 }
 
                 try {
@@ -766,14 +766,14 @@ class SyncFromPartsDB extends Command
                         }
                     }
                 } catch (\Throwable $th) {
-                    //throw $th;
+                    echo $th;
                 }
 
                 if (count($product_vehicle_array) >= 100) {
                     try {
                         ProductVehicle::insert($product_vehicle_array);
                     } catch (\Throwable $th) {
-                        //throw $th;
+                        echo $th;
                     }
                     echo "Vehicles Product Mapping inserted : " . count($product_vehicle_array) . "\n \n";
                     $product_vehicle_array = [];
