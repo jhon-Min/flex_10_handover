@@ -741,11 +741,13 @@ class SyncFromPartsDB extends Command
                 list($product_nr, $brand_id) = explode("_", $db_product);
                 $vehicles = $this->partsdbapirepository->getVehiclesLinkedToProduct($product_nr, $brand_id);
 
-                echo "Vehicles Product Fetched :\n";
+                echo "Vehicles Product Fetched : $vehicles \n";
                 $VehicleIDs = array_column($vehicles, "VehicleID");
 
                 foreach ($VehicleIDs as $VehicleID) {
                     Log::info(in_array($product_id . "_" . $VehicleID, $product_vehicle));
+                    Log::info('dd: ' . in_array($VehicleID, $db_vehicles));
+
                     if (!in_array($product_id . "_" . $VehicleID, $product_vehicle) && in_array($VehicleID, $db_vehicles)) {
                         echo "Start loop vehicle: $VehicleID \n";
                         $product_vehicle_array[] = [
@@ -756,7 +758,7 @@ class SyncFromPartsDB extends Command
                     }
                 }
 
-                if (count($product_vehicle_array) >= 100) {
+                if (count($product_vehicle_array) >= 10) {
                     echo "insert product vehicle \n";
                     ProductVehicle::insert($product_vehicle_array);
                     echo "Vehicles Product Mapping inserted : " . count($product_vehicle_array) . "\n \n";
