@@ -739,42 +739,25 @@ class SyncFromPartsDB extends Command
         foreach ($db_products_nr as $product_id => $db_product) {
             try {
                 list($product_nr, $brand_id) = explode("_", $db_product);
+                $vehicles = $this->partsdbapirepository->getVehiclesLinkedToProduct($product_nr, $brand_id);
 
-                try {
-                    $vehicles = $this->partsdbapirepository->getVehiclesLinkedToProduct($product_nr, $brand_id);
-                } catch (\Throwable $th) {
-                    echo $th;
-                }
-                // echo "Vehicles Product Fetched : " . count($vehicles) . "\n";
-                try {
-                    $VehicleIDs = array_column($vehicles, "VehicleID");
-                } catch (\Throwable $th) {
-                    echo $th;
-                }
+                echo "Vehicles Product Fetched : " . count($vehicles) . "\n";
+                $VehicleIDs = array_column($vehicles, "VehicleID");
+                foreach ($VehicleIDs as $VehicleID) {
 
-                try {
-                    foreach ($VehicleIDs as $VehicleID) {
-
-                        if (!in_array($product_id . "_" . $VehicleID, $product_vehicle) && in_array($VehicleID, $db_vehicles)) {
-                            echo "Start loop vehicle: $VehicleID \n";
-                            $product_vehicle_array[] = [
-                                'product_id' => $product_id,
-                                'vehicle_id' => $VehicleID
-                            ];
-                            $product_vehicle[] = $product_id . "_" . $VehicleID;
-                        }
+                    if (!in_array($product_id . "_" . $VehicleID, $product_vehicle) && in_array($VehicleID, $db_vehicles)) {
+                        echo "Start loop vehicle: $VehicleID \n";
+                        $product_vehicle_array[] = [
+                            'product_id' => $product_id,
+                            'vehicle_id' => $VehicleID
+                        ];
+                        $product_vehicle[] = $product_id . "_" . $VehicleID;
                     }
-                } catch (\Throwable $th) {
-                    echo $th;
                 }
 
-                if (count($product_vehicle_array) >= 100) {
+                if (count($product_vehicle_array) >= 10) {
                     echo "insert product vehicle \n";
-                    try {
-                        ProductVehicle::insert($product_vehicle_array);
-                    } catch (\Throwable $th) {
-                        echo $th;
-                    }
+                    ProductVehicle::insert($product_vehicle_array);
                     echo "Vehicles Product Mapping inserted : " . count($product_vehicle_array) . "\n \n";
                     $product_vehicle_array = [];
                 }
