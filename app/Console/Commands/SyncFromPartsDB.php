@@ -754,10 +754,9 @@ class SyncFromPartsDB extends Command
 
                 try {
                     foreach ($VehicleIDs as $VehicleID) {
-                        echo "Start loop vehicle: $VehicleID \n";
 
                         if (!in_array($product_id . "_" . $VehicleID, $product_vehicle) && in_array($VehicleID, $db_vehicles)) {
-
+                            echo "Start loop vehicle: $VehicleID \n";
                             $product_vehicle_array[] = [
                                 'product_id' => $product_id,
                                 'vehicle_id' => $VehicleID
@@ -770,6 +769,7 @@ class SyncFromPartsDB extends Command
                 }
 
                 if (count($product_vehicle_array) >= 100) {
+                    echo "insert product vehicle \n";
                     try {
                         ProductVehicle::insert($product_vehicle_array);
                     } catch (\Throwable $th) {
