@@ -741,7 +741,6 @@ class SyncFromPartsDB extends Command
                 list($product_nr, $brand_id) = explode("_", $db_product);
                 $vehicles = $this->partsdbapirepository->getVehiclesLinkedToProduct($product_nr, $brand_id);
 
-                echo "Vehicles Product Fetched : $vehicles \n";
                 $VehicleIDs = array_column($vehicles, "VehicleID");
 
                 foreach ($VehicleIDs as $VehicleID) {
@@ -758,7 +757,7 @@ class SyncFromPartsDB extends Command
                     }
                 }
 
-                if (count($product_vehicle_array) >= 10) {
+                if (count($product_vehicle_array) >= 5) {
                     echo "insert product vehicle \n";
                     ProductVehicle::insert($product_vehicle_array);
                     echo "Vehicles Product Mapping inserted : " . count($product_vehicle_array) . "\n \n";
