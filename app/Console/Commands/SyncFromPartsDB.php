@@ -76,14 +76,14 @@ class SyncFromPartsDB extends Command
 
         // Get all brands that available to the customer from parts db and import in local database (Complete)
         echo "Start : Import Brands \n";
-        // $this->importBrands();
+        $this->importBrands();
         echo "End : Import Brands \n\n";
         $import_script->brand = 1;
         $import_script->save();
 
         //Get the list of all Makes and Models from PARts system and import in local database
         echo "Start : Import Makes and Models \n";
-        // $this->importMakeAndModel();
+        $this->importMakeAndModel();
         echo "End : Import Makes and Models \n\n";
         $import_script->make_model = 1;
         $import_script->save();
@@ -91,24 +91,24 @@ class SyncFromPartsDB extends Command
         //Import Products from the partsdb to local database with make, model, vehicle mapping (Complete)
         echo "Start : Import Products \n";
         Log::info("Start : Import Products");
-        // $this->importProducts();
+        $this->importProducts();
         Log::info("End : Import Products");
         echo "End : Import Products \n\n";
 
         //delete Products from local db which are removed from parts db and not coming in sync
         echo "Start : Delete Products \n";
-        // $this->deleteProducts();
+        $this->deleteProducts();
         echo "End : Delete Products \n\n";
 
         // Get CED Prodct Criteria (Complete)
         echo "Start : Import CED Product Criteria \n";
-        // $this->importCEDProductCriteria();
+        $this->importCEDProductCriteria();
         echo "End : Import CED Product Criteria \n\n";
         $import_script->product_criteria = 1;
         $import_script->save();
 
         echo "Start : Import CED Product Company Web Status \n";
-        // $this->importPorductCompanyWebStatus();
+        $this->importPorductCompanyWebStatus();
         echo "End : Import CED Product Company Web Status \n\n";
         $import_script->products = 1;
         $import_script->save();
@@ -116,7 +116,7 @@ class SyncFromPartsDB extends Command
 
         //Import Vehicles from the partsdb to local database
         echo "Start : Import Vehicles \n";
-        // $this->importVehicles();
+        $this->importVehicles();
         echo "End : Import Vehicles \n";
         $import_script->vehicle = 1;
         $import_script->save();
