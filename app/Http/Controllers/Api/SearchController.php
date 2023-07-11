@@ -164,44 +164,6 @@ class SearchController extends BaseController
     public function models($id)
     {
         try {
-            $this->partsdbapirepository->login();
-            $makes_and_models = $this->partsdbapirepository->getAllMakesAndModels();
-            $db_makes = Make::all()->pluck('id')->toArray();
-            $makes_array = [];
-            foreach ($makes_and_models->ListMakes as $make) {
-                if (!in_array($make->ID, $db_makes)) {
-                    $makes_array[] = [
-                        'id' => $make->ID,
-                        'name' => $make->Make,
-                    ];
-                }
-            }
-
-            if (!empty($makes_array)) {
-                Make::insert($makes_array);
-            }
-
-            $db_models = Models::all()->pluck('name')->toArray();
-            $models_array = [];
-            foreach ($makes_and_models->ListModels as $model) {
-
-                if (!in_array($model->Model, $db_models)) {
-                    $models_array[] = [
-                        'make_id' => $model->MakeID,
-                        'name' => $model->Model,
-                    ];
-                }
-
-                if (count($models_array) >= 1000) {
-                    Models::insert($models_array);
-                    $models_array = [];
-                }
-            }
-
-            if (count($models_array) > 0) {
-                Models::insert($models_array);
-                $models_array = [];
-            }
             $models = Models::where('make_id', $id)->select('id', 'name')->get();
             return $this->sendResponse($models, "Models");
         } catch (\Exception $e) {
