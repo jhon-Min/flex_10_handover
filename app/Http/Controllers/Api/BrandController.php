@@ -39,43 +39,24 @@ class BrandController extends BaseController
     public function index(Request $request)
     {
 
-        try {
-            $this->partsdbapirepository->login();
-            $brand_api =  $this->partsdbapirepository->getAllBrands();
+        $brands = Brand::all();
+        $message = "All brands";
 
-            foreach ($brand_api as $brand) {
-                $brands_data = Brand::firstOrCreate(
-                    [
-                        'id' => $brand->ID,
-                        'name' => $brand->BrandName,
-                    ],
-                );
-                $brands_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
-                $brands_data->save();
+        if (!empty($request->all())) {
+
+            foreach ($brands as $brand) {
+                $filters = $request->all();
+                $filters['count'] = true;
+                $filters['brand_id'] = $brand->id;
+                $products = $this->productsRepository->getProducts($filters);
+                $brand->product_count = $products;
             }
-
-            $brands = Brand::all();
-            $message = "All brands";
-
-            if (!empty($request->all())) {
-
-                foreach ($brands as $brand) {
-                    $filters = $request->all();
-                    $filters['count'] = true;
-                    $filters['brand_id'] = $brand->id;
-                    $products = $this->productsRepository->getProducts($filters);
-                    $brand->product_count = $products;
-                }
-            } else {
-                foreach ($brands as $brand) {
-                    $brand->product_count = $brand->products()->count();
-                }
+        } else {
+            foreach ($brands as $brand) {
+                $brand->product_count = $brand->products()->count();
             }
-
-            return $this->sendResponse($brands, $message);
-        } catch (\Exception $e) {
-
-            return $this->sendError($e->getMessage(), [], 401);
         }
+
+        return $this->sendResponse($brands, $message);
     }
 }
