@@ -76,14 +76,14 @@ class SyncFromPartsDB extends Command
 
         // Get all brands that available to the customer from parts db and import in local database (Complete)
         echo "Start : Import Brands \n";
-        $this->importBrands();
+        // $this->importBrands();
         echo "End : Import Brands \n\n";
         $import_script->brand = 1;
         $import_script->save();
 
         //Get the list of all Makes and Models from PARts system and import in local database
         echo "Start : Import Makes and Models \n";
-        $this->importMakeAndModel();
+        // $this->importMakeAndModel();
         echo "End : Import Makes and Models \n\n";
         $import_script->make_model = 1;
         $import_script->save();
@@ -406,7 +406,7 @@ class SyncFromPartsDB extends Command
                     $products_array[] = array_merge($product_details, $product_critearea);
                 }
 
-                if (count($products_array) >= 1000) {
+                if (count($products_array) >= 1) {
                     echo "Add products array to product table \n \n";
                     $this->process($products_array, 'product_tmp');
                     try {
@@ -519,45 +519,38 @@ class SyncFromPartsDB extends Command
 
     protected function process(array $records, $table)
     {
-
+        echo "Product Process $table \n";
         if (count($records) == 0) {
             return true;
-        }
-
-        if ($table == 'product_tmp') {
+        } else {
             foreach ($records as $record) {
                 Log::info($record);
-                try {
-                    if ($product = Product::where('product_nr', $record['product_nr'])->where('company_sku', $record['company_sku'])->first()) {
-                        Log::info($product);
-                        echo "Product Upate: $record \n";
-                        $product->update([
-                            'brand_id' => $record['brand_id'],
-                            // 'product_nr' => $record['product_nr'],
-                            'name' => $record['name'],
-                            'description' => $record['description'],
-                            'cross_reference_numbers' => $record['cross_reference_numbers'],
-                            'associated_part_numbers' => $record['associated_part_numbers'],
-                            // 'company_sku' => $record['company_sku'],
-                            'standard_description_id' => $record['standard_description_id'],
-                            'last_updated' => $record['last_updated']
-                        ]);
-                    } else {
-                        echo "Product Create: $record \n";
-                        Product::create([
-                            'brand_id' => $record['brand_id'],
-                            'product_nr' => $record['product_nr'],
-                            'name' => $record['name'],
-                            'description' => $record['description'],
-                            'cross_reference_numbers' => $record['cross_reference_numbers'],
-                            'associated_part_numbers' => $record['associated_part_numbers'],
-                            'company_sku' => $record['company_sku'],
-                            'standard_description_id' => $record['standard_description_id'],
-                            'last_updated' => $record['last_updated']
-                        ]);
-                    }
-                } catch (\Throwable $th) {
-                    //throw $th;
+                if ($product = Product::where('product_nr', $record['product_nr'])->where('company_sku', $record['company_sku'])->first()) {
+                    Log::info($product);
+                    echo "Product Upate: " . "\n";
+                    $product->brand_id = $record['brand_id'];
+                    $product->product_nr = $record['product_nr'];
+                    $product->company_sku = $record['company_sku'];
+                    $product->name = $record['name'];
+                    $product->description = $record['description'];
+                    $product->cross_reference_numbers = $record['cross_reference_numbers'];
+                    $product->associated_part_numbers = $record['associated_part_numbers'];
+                    $product->standard_description_id = $record['standard_description_id'];
+                    $product->last_updated = $record['last_updated'];
+                    $product->update();
+                } else {
+                    echo "Product Create: " . "\n";
+                    Product::create([
+                        'brand_id' => $record['brand_id'],
+                        'product_nr' => $record['product_nr'],
+                        'name' => $record['name'],
+                        'description' => $record['description'],
+                        'cross_reference_numbers' => $record['cross_reference_numbers'],
+                        'associated_part_numbers' => $record['associated_part_numbers'],
+                        'company_sku' => $record['company_sku'],
+                        'standard_description_id' => $record['standard_description_id'],
+                        'last_updated' => $record['last_updated']
+                    ]);
                 }
             }
         }
