@@ -530,6 +530,7 @@ class SyncFromPartsDB extends Command
                 try {
                     if ($product = Product::where('product_nr', $record['product_nr'])->where('company_sku', $record['company_sku'])->first()) {
                         Log::info($product);
+                        echo "Product Upate: $record \n";
                         $product->update([
                             'brand_id' => $record['brand_id'],
                             // 'product_nr' => $record['product_nr'],
@@ -542,6 +543,7 @@ class SyncFromPartsDB extends Command
                             'last_updated' => $record['last_updated']
                         ]);
                     } else {
+                        echo "Product Create: $record \n";
                         Product::create([
                             'brand_id' => $record['brand_id'],
                             'product_nr' => $record['product_nr'],
