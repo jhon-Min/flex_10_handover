@@ -76,14 +76,14 @@ class SyncFromPartsDB extends Command
 
         // Get all brands that available to the customer from parts db and import in local database (Complete)
         echo "Start : Import Brands \n";
-        // $this->importBrands();
+        $this->importBrands();
         echo "End : Import Brands \n\n";
         $import_script->brand = 1;
         $import_script->save();
 
         //Get the list of all Makes and Models from PARts system and import in local database
         echo "Start : Import Makes and Models \n";
-        // $this->importMakeAndModel();
+        $this->importMakeAndModel();
         echo "End : Import Makes and Models \n\n";
         $import_script->make_model = 1;
         $import_script->save();
