@@ -406,7 +406,7 @@ class SyncFromPartsDB extends Command
                     $products_array[] = array_merge($product_details, $product_critearea);
                 }
 
-                if (count($products_array) >= 1) {
+                if (count($products_array) >= 500) {
                     echo "Add products array to product table \n \n";
                     $this->process($products_array, 'product_tmp');
                     try {
@@ -524,33 +524,36 @@ class SyncFromPartsDB extends Command
             return true;
         } else {
             foreach ($records as $record) {
-                Log::info($record);
-                if ($product = Product::where('product_nr', $record['product_nr'])->where('company_sku', $record['company_sku'])->first()) {
-                    Log::info($product);
-                    echo "Product Upate: " . "\n";
-                    $product->brand_id = $record['brand_id'];
-                    $product->product_nr = $record['product_nr'];
-                    $product->company_sku = $record['company_sku'];
-                    $product->name = $record['name'];
-                    $product->description = $record['description'];
-                    $product->cross_reference_numbers = $record['cross_reference_numbers'];
-                    $product->associated_part_numbers = $record['associated_part_numbers'];
-                    $product->standard_description_id = $record['standard_description_id'];
-                    $product->last_updated = $record['last_updated'];
-                    $product->update();
-                } else {
-                    echo "Product Create: " . "\n";
-                    Product::create([
-                        'brand_id' => $record['brand_id'],
-                        'product_nr' => $record['product_nr'],
-                        'name' => $record['name'],
-                        'description' => $record['description'],
-                        'cross_reference_numbers' => $record['cross_reference_numbers'],
-                        'associated_part_numbers' => $record['associated_part_numbers'],
-                        'company_sku' => $record['company_sku'],
-                        'standard_description_id' => $record['standard_description_id'],
-                        'last_updated' => $record['last_updated']
-                    ]);
+                try {
+                    if ($product = Product::where('product_nr', $record['product_nr'])->where('company_sku', $record['company_sku'])->first()) {
+                        Log::info($product);
+                        echo "Product Upate: " . "\n";
+                        $product->brand_id = $record['brand_id'];
+                        $product->product_nr = $record['product_nr'];
+                        $product->company_sku = $record['company_sku'];
+                        $product->name = $record['name'];
+                        $product->description = $record['description'];
+                        $product->cross_reference_numbers = $record['cross_reference_numbers'];
+                        $product->associated_part_numbers = $record['associated_part_numbers'];
+                        $product->standard_description_id = $record['standard_description_id'];
+                        $product->last_updated = $record['last_updated'];
+                        $product->update();
+                    } else {
+                        echo "Product Create: " . "\n";
+                        Product::create([
+                            'brand_id' => $record['brand_id'],
+                            'product_nr' => $record['product_nr'],
+                            'name' => $record['name'],
+                            'description' => $record['description'],
+                            'cross_reference_numbers' => $record['cross_reference_numbers'],
+                            'associated_part_numbers' => $record['associated_part_numbers'],
+                            'company_sku' => $record['company_sku'],
+                            'standard_description_id' => $record['standard_description_id'],
+                            'last_updated' => $record['last_updated']
+                        ]);
+                    }
+                } catch (\Throwable $th) {
+                    //throw $th;
                 }
             }
         }
