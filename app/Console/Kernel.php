@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        $schedule->command('sync:category')->everyTwoMinutes();
         $schedule->command('sync:category')->everyTwoHours();
         $schedule->command('sync:partsdb')->daily('1:00')->withoutOverlapping();
         $schedule->command('sync:product-image')->daily('7:00');
