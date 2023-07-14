@@ -158,7 +158,7 @@ class SyncFromPartsDB extends Command
         $brands = $this->partsdbapirepository->getAllBrands();
         $brands_array = [];
         foreach ($brands as $brand) {
-            if ($brand->BrandName !=  "BOSCH" && $brand->BrandName != "DOGA") {
+            if ($brand->BrandName != "BOSCH" && $brand->BrandName != "DOGA") {
                 $brand_data = Brand::firstOrCreate(['id' => $brand->ID, 'name' => $brand->BrandName]);
                 $brand_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
                 $brand_data->save();
