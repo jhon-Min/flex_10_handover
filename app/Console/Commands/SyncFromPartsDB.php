@@ -2,25 +2,26 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Repositories\PartsDBAPIRepository;
-
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 use App\Models\Make;
+
 use App\Models\Brand;
 use App\Models\Models;
-use App\Models\Vehicle;
 use App\Models\Product;
-use Carbon\Carbon;
+use App\Models\Vehicle;
+use App\Models\Category;
 use App\Models\VehicleTemp;
 use App\Models\ProductImage;
 use App\Models\ProductVehicle;
 use App\Models\ProductCategory;
-use App\Models\ImportScriptHistory;
+use Illuminate\Console\Command;
 use App\Models\CEDProductCriteria;
+use Illuminate\Support\Facades\DB;
+use App\Models\ImportScriptHistory;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
+use App\Repositories\PartsDBAPIRepository;
 
 class SyncFromPartsDB extends Command
 {
@@ -80,6 +81,11 @@ class SyncFromPartsDB extends Command
         echo "End : Import Brands \n\n";
         $import_script->brand = 1;
         $import_script->save();
+
+        echo "Start : Import categories \n";
+        $this->importCategories();
+        echo "End : Import categories \n\n";
+        $import_script->categories = 1;
 
         //Get the list of all Makes and Models from PARts system and import in local database
         echo "Start : Import Makes and Models \n";
@@ -163,6 +169,28 @@ class SyncFromPartsDB extends Command
                 $brand_data->logo = $brand->ImagesLocation . $brand->LogoFileName;
                 $brand_data->save();
             }
+        }
+    }
+
+    protected function importCategories()
+    {
+
+        $db_categories = Category::all()->pluck('id')->toArray();
+        $categories = $this->partsdbapirepository->getAllCategories();
+
+        $category_array = [];
+        foreach ($categories as $category) {
+
+            $category_data = Category::firstOrCreate([
+                'id' => $category->CategoryID,
+                'name' => $category->CategoryName
+            ]);
+
+            $category_data->parent_id = $category->CategoryParentID ?? 0;
+            $category_data->description = $category->CategoryDescription;
+            $category_data->icon = $category->CategoryIcon;
+            $category_data->image = $category->CategoryImage;
+            $category_data->save();
         }
     }
 
