@@ -59,6 +59,7 @@ class SyncProductQuantity extends Command
 
         $product_quantities = [];
         foreach ($db_products as $product_id => $company_sku) {
+            echo "Start Loop $product_id \n";
 
             $total_quantity = 0;
             $qty_data = $this->sageapirepository->getProductQuantity($company_sku);
@@ -96,6 +97,7 @@ class SyncProductQuantity extends Command
         }
 
         if (count($product_quantities) > 0) {
+            echo "Start Process \n";
             $this->process($product_quantities);
             $product_quantities = null;
         }
