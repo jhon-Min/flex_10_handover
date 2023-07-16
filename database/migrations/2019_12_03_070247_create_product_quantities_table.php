@@ -19,6 +19,7 @@ class CreateProductQuantitiesTable extends Migration
             $table->bigInteger('branch_id')->unsigned();
             $table->string('company_sku', 20);
             $table->integer('qty');
+            $table->timestamps();
 
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');

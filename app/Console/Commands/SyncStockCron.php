@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Branch;
 use App\Models\Product;
 use Illuminate\Console\Command;
 use App\Models\ProductImportStatus;
+use App\Models\ProductQuantity;
 use Illuminate\Support\Facades\Log;
 
 class SyncStockCron extends Command
@@ -36,23 +38,39 @@ class SyncStockCron extends Command
         try {
             if (file_exists($filepath)) {
                 Log::info("Stock Started : start working now");
-
+                echo "Start qty import";
                 $file = fopen($filepath, "r");
                 $start_time = date('Y-m-d H:i:s');
 
                 // Read the CSV file line by line
+                $i = 1;
                 while (($row = fgetcsv($file)) !== false) {
                     // Push the row data into the array
                     $product_nr = $row[0];
                     $qty = $row[1];
-                    $company_sku = $row[2];
-                    $id = $this->getProductWithSku($company_sku);
-
-                    if (!empty($id)) {
-                        $update = Product::where('id', $id)->update([
+                    $branch_code = $row[2];
+                    $product = Product::where("product_nr", $product_nr)->first();
+                    $branch = Branch::where("code", $branch_code)->first();
+                    if ($product) {
+                        $product_id = $product->id;
+                        $update = $product->update([
                             'product_nr' => $product_nr,
                             'qty' => $qty,
                         ]);
+                        if ($product && $branch) {
+                            // ProductQuantity::updateOrCreate([
+                            //     "product_id" => $product_id,
+                            //     "branch_id" => $branch->id,
+                            // ], ["qty" => $qty, "company_sku" => $product->company_sku]);
+
+                            ProductQuantity::updateOrCreate(["product_id" => $product_id, "branch_id" => $branch->id], ["qty" => $qty, "company_sku" => $product->company_sku]);
+                            echo ("branch id $branch->id product id $product_id sku $product->company_sku qty $qty");
+                        }
+                        echo ("$i found proudct id $product_id , nr $product_nr and qty is $qty \n");
+                        $i++;
+                    } else {
+                        echo "$i skip not found \n";
+                        $i++;
                     }
                 }
                 // Close the file
@@ -69,7 +87,7 @@ class SyncStockCron extends Command
         } catch (\Throwable $th) {
             return $th;
         } finally {
-            unlink($filepath);
+            // unlink($filepath);
         }
 
         // if ($timestamp == $currentTimestamp) {

@@ -19,3 +19,4 @@ yarn-error.log
 /.vscode
 ~/.cache/zsh/compcache/DEBS_installed
 ~/.cache/zsh/compcache/DEBS_xinstalled
+~/.cache/zsh/compcache/composer-pkgs

@@ -16,11 +16,12 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('sync:category')->everyTwoHours();
-        $schedule->command('sync:partsdb')->timezone(env('CRON_TIME_ZONE'))->dailyAt(env('CRON_TIME'));
         // $schedule->command('sync:partsdb')->daily('1:00')->withoutOverlapping();
-        $schedule->command('sync:product-image')->daily('1:00');
-        $schedule->command('stock:cron')->daily()->between('6:00', '16:00');
-        $schedule->command('productprice:cron')->daily()->between('6:00', '16:00');
+
+        // $schedule->command('sync:partsdb')->timezone(env('CRON_TIME_ZONE'))->dailyAt(env('CRON_TIME'));
+        // $schedule->command('sync:product-image')->daily('1:00');
+        $schedule->command('stock:cron')->everyMinute()->timezone(env('CRON_TIME_ZONE'))->between('6:00', '16:00');
+        // $schedule->command('productprice:cron')->daily()->between('6:00', '16:00');
     }
 
     /**

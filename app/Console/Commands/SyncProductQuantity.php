@@ -49,8 +49,7 @@ class SyncProductQuantity extends Command
         ini_set('memory_limit', '-1');
         $current_time = Carbon::now();
 
-        echo "Start : Import Product QTY\n";
-        Log::info("Started : Import Product QTY");
+        echo ("Started : Import Product QTY");
 
         $db_products = $this->getProductWithSkus();
         $db_branches = $this->getAllBranches();
@@ -105,7 +104,7 @@ class SyncProductQuantity extends Command
         $this->dropTempTable();
 
         $end_time = Carbon::now();
-        Log::info("Completed : Import Product QTY" . $end_time->diffForHumans($current_time));
+        // Log::info("Completed : Import Product QTY" . $end_time->diffForHumans($current_time));
         echo "End : Import Product QTY\n";
     }
 
