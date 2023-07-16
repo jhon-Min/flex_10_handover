@@ -117,11 +117,9 @@ class ProductsRepository extends BaseRepository
 
         // Filter with product nr
         if (isset($filters['product_nr'])) {
-            $products->where(function ($query) use ($filters) {
-                $query->where('product_nr', $filters['product_nr'])
-                    ->orWhere('company_sku', $filters['product_nr'])
-                    ->orWhereRaw('FIND_IN_SET("' . $filters['product_nr'] . '",cross_reference_numbers)');
-            });
+            $products->where('product_nr', $filters['product_nr'])
+                ->orWhere('company_sku', $filters['product_nr'])
+                ->orWhereRaw('FIND_IN_SET("' . $filters['product_nr'] . '",cross_reference_numbers)');
         }
 
         if (isset($filters['fitting_position'])) {
@@ -272,24 +270,24 @@ class ProductsRepository extends BaseRepository
 
         $in_stock = $flag_no_stock > 0 ? 1 : 0;
         if (!empty($part_type) && !empty($paginate)) {
-            SearchHistory::create([
-                'user_id'      => $userInfo->id,
-                'search_type'  => $part_type ?? NULL,
-                'part_number'  => $filters['product_nr'] ?? NULL,
-                'state'        => $state ?? '',
-                'reg_number'   => $filters['rego_number'] ?? '',
-                'vin'          => $filters['vin_number'] ?? '',
-                'make_id'      => $filters['make_id'] ?? NULL,
-                'model_id'     => $filters['model_id'] ?? NULL,
-                'sub_model'    => $filters['sub_model'] ?? NULL,
-                'year'         => $filters['year'] ?? NULL,
-                'chassis_code' => $filters['chassis_code'] ?? NULL,
-                'engine_code'  => $filters['engine_code'] ?? NULL,
-                'cc'           => $filters['cc'] ?? NULL,
-                'power'        => $filters['power'] ?? NULL,
-                'body_type'    => $filters['body_type'] ?? NULL,
-                'in_stock'     => $flag_no_stock ?? NULL,
-            ]);
+            // SearchHistory::create([
+            //     'user_id'      => $userInfo->id,
+            //     'search_type'  => $part_type ?? '',
+            //     'part_number'  => $filters['product_nr'] ?? '',
+            //     'state'        => $state ?? '',
+            //     'reg_number'   => $filters['rego_number'] ?? '',
+            //     'vin'          => $filters['vin_number'] ?? '',
+            //     'make_id'      => $filters['make_id'] ?? '',
+            //     'model_id'     => $filters['model_id'] ?? '',
+            //     'sub_model'    => $filters['sub_model'] ?? '',
+            //     'year'         => $filters['year'] ?? '',
+            //     'chassis_code' => $filters['chassis_code'] ?? '',
+            //     'engine_code'  => $filters['engine_code'] ?? '',
+            //     'cc'           => $filters['cc'] ?? '',
+            //     'power'        => $filters['power'] ?? '',
+            //     'body_type'    => $filters['body_type'] ?? '',
+            //     'in_stock'     => $flag_no_stock ?? '',
+            // ]);
         }
 
         return $products;

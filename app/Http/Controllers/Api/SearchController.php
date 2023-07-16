@@ -53,7 +53,7 @@ class SearchController extends BaseController
             //$filters['count'] = true;
             $products = $this->productsRepository->getProducts($filters, false);
             $vehicles = $this->productsRepository->getVehicles($filters, false);
-            return $this->sendResponse(['count' => count($products), 'vehicles' => $vehicles], "Products Count");
+            return $this->sendResponse(['count' => $products, 'vehicles' => $vehicles], "Products Count");
         } catch (\Exception $e) {
             return $this->sendError($e->getMessage(), [], 401);
         }
