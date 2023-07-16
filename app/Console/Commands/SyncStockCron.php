@@ -87,7 +87,7 @@ class SyncStockCron extends Command
         } catch (\Throwable $th) {
             return $th;
         } finally {
-            // unlink($filepath);
+            unlink($filepath);
         }
 
         // if ($timestamp == $currentTimestamp) {
