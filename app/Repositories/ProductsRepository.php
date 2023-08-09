@@ -117,9 +117,11 @@ class ProductsRepository extends BaseRepository
 
         // Filter with product nr
         if (isset($filters['product_nr'])) {
-            $products->where('product_nr', $filters['product_nr'])
-                ->orWhere('company_sku', $filters['product_nr'])
-                ->orWhereRaw('FIND_IN_SET("' . $filters['product_nr'] . '",cross_reference_numbers)');
+            $products->where(function ($query) use ($filters) {
+                $query->where('product_nr', $filters['product_nr'])
+                    ->orWhere('company_sku', $filters['product_nr'])
+                    ->orWhereRaw('FIND_IN_SET("' . $filters['product_nr'] . '",cross_reference_numbers)');
+            });
         }
 
         if (isset($filters['fitting_position'])) {
